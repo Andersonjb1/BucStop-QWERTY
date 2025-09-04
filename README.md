@@ -4,9 +4,9 @@
 
 ## Overview
 
-BucStop-Goofin is a modern microservices-based gaming platform developed as part of the Software Engineering II course. <br>This platform features classic arcade games (Snake, Tetris, and Pong) with a clean, responsive UI and a scalable architecture designed for cloud deployment.
+BucStop is a modern microservices-based gaming platform developed as part of the Software Engineering II course. <br>This platform features classic arcade games (Snake, Tetris, and Pong) with a clean, responsive UI and a scalable architecture designed for cloud deployment.
 
-[▶️ Watch the BucStop-Goofin Intro & Demo Video](https://vimeo.com/1079595088/f69404c8a6?ts=0&share=copy)
+[▶️ Watch the BucStop Intro & Demo Video](https://vimeo.com/1079595088/f69404c8a6?ts=0&share=copy)
 
 
 
@@ -42,8 +42,8 @@ The application is built using a microservices architecture with the following c
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-org/BucStop-Goofin.git
-   cd BucStop-Goofin
+   git clone https://github.com/your-org/BucStop-QWERTY.git
+   cd BucStop-QWERTY
    ```
 
 2. Start all services using Docker Compose:
@@ -116,8 +116,8 @@ Visual Studio automatically handles:
 
 5. Clone the repository and start the services:
    ```bash
-   git clone https://github.com/<your-repo>/BucStop-Goofin.git
-   cd BucStop-Goofin
+   git clone https://github.com/<your-repo>/BucStop-QWERTY.git
+   cd BucStop-QWERTY
    docker-compose up
    ```
 
@@ -139,7 +139,7 @@ env=containers docker-compose up -d
 ## Project Structure
 
 ```
-BucStop-Goofin/
+BucStop-QWERTY/
 ├── Bucstop WebApp/            # Main web application
 │   └── BucStop/
 │       ├── Controllers/       # MVC controllers
