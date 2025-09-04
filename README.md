@@ -1,4 +1,4 @@
-# BucStop-Goofin
+# BucStop
 
 ![BucStop Logo](/Bucstop%20WebApp/BucStop/wwwroot/Logo.png)
 
