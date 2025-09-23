@@ -199,6 +199,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 * Original BucStop project that served as foundation from previous semesters
 * All contributors to the project from the most recent semester:
 
-	- @Teal_04, @rhanc, @LoftKl, @Andersonjb1, @T0xen, @JoeNeglia, @Kataruse
+	- @Teal_04, @rhanc, @LoftKl, @Andersonjb1, @T0xen, @JoeNeglia, @Kataruse, @Derek214, @K-Baker101020
 
 * Software Engineering II course instructor, Professor Kinser
