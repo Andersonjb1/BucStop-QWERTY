@@ -8,10 +8,15 @@
 
 First need to mount a volume, which gives the volume access to a specific directory inside a container (ex. `Playcount.json` or log files)
 
+![](images/RollbackResearch/image_1.png)
+
 * **Define/Create the volume**
+
+![](images/RollbackResearch/image_2.png)
+
 * **Volumes can be mounted and defined inside of docker compose.** Running `docker compose up` for the first time creates a volume. Docker reuses the same volume when you run the command subsequently.
 
-![Docker volume configuration example](images/image_1.png)
+![](images/RollbackResearch/image_3.png)
 
 ## Some Implications for Docker Volumes:
 

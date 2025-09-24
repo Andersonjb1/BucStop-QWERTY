@@ -12,13 +12,17 @@ They do present a single point of failure and have some scalability issues as wh
 
 Here is a visual from one of our resources. In this example, there is additional abstraction by using an identity provider and service registry that will likely not be needed for our project.
 
-![API Gateway architecture diagram with identity provider and service registry](images/image_1.png)
+![](images/CookedAPIGatewayResearch/image_1.png)
 
 ## What should an API Gateway do:
 
 An API Gateway should, as mentioned above, handle requests from an application for data from other microservices. This means that the application never actually interacts with the microservices directly, instead interacting with the API Gateway which then interacts with the microservices to gather the data requested, combine it into a usable format for the application, then return it to the application.
 
+![](images/CookedAPIGatewayResearch/image_2.png)
+
 The API Gateway can handle traffic in various ways, such as burst limits, throttling for an application or individual user, and Queues of API messages that will be handled over time.
+
+![](images/CookedAPIGatewayResearch/image_3.png)
 
 ## What does our API Gateway do and not do to facilitate this workflow:
 
@@ -36,7 +40,7 @@ In addition, our solution is not actually using the API Gateway for running the 
 
 For our current API Gateway, there are 3 endpoints seen below to get the game data for the 3 games. As mentioned above, these are not being utilized yet.
 
-![API Gateway endpoints showing 3 endpoints for game data](images/image_2.png)
+![](images/CookedAPIGatewayResearch/image_4.png)
 
 ## Resources:
 
@@ -47,5 +51,7 @@ For our current API Gateway, there are 3 endpoints seen below to get the game da
 ---
 
 ## Required Images:
-* `images/image_1.png` - "API Gateway architecture diagram with identity provider and service registry"
-* `images/image_2.png` - "API Gateway endpoints showing 3 endpoints for game data"
+* `images/CookedAPIGatewayResearch/image_1.png`
+* `images/CookedAPIGatewayResearch/image_2.png`
+* `images/CookedAPIGatewayResearch/image_3.png`
+* `images/CookedAPIGatewayResearch/image_4.png`
