@@ -10,8 +10,16 @@
 
 * Our docker compose file currently exposes the containers on different ports than the ones that are used locally
 * I tried fixing this by changing the ports to the ones that are used locally ex: changed api gateway to port 4141. *These changes did not work so they weren't committed*
+
+![](images/DockerResearch/image_1.png)
+
 * This still doesn't work, because our docker containers are using http rather than https
+
+![](images/DockerResearch/image_2.png)
+
 * When using curl on `http://localhost:4141/Gateway` rather than `https://localhost:4141/Gateway` we can see that it returns 200, meaning the api gateway is running on this port, just not using https
+
+![](images/DockerResearch/image_3.png)
 
 ## Potential Solutions:
 
@@ -21,4 +29,6 @@
 ---
 
 ## Required Images:
-*No images were present in this document.*
+* `images/DockerResearch/image_1.png`
+* `images/DockerResearch/image_1.png`
+* `images/DockerResearch/image_1.png`

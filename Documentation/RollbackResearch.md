@@ -29,4 +29,6 @@ https://docs.google.com/document/d/11LTixLWicBxM4XUPWyNRi4D5uFsL58xRFvQ-kOm0b9s/
 ---
 
 ## Required Images:
-* `images/image_1.png` - "Docker volume configuration example"
+* `images/RollbackResearch/image_1.png)`
+* `images/RollbackResearch/image_2.png)`
+* `images/RollbackResearch/image_3.png)`

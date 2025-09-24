@@ -1,6 +1,0 @@
-﻿Snake Docs
-1. Snake works when the user interacts with it, however, it has a few glitches including speeding up by hitting the space bar, won’t crash into the wall, and the screen moves whenever you hit any arrow key. 
-2. Hammer.min.js is an interactive API that allows touchscreen users to interact with it.
-3. Then program.cs will also publish a JSON endpoint for services 
-4. Also, I found a copy of Snake within BucStop. So, they use the copy as a deprecated page loaded in the Snake game before loading games using the js files.
-5. Snake still seems to work even when every trace of code has been deleted. After deleting as much as I could, I still couldn't figure out how exactly the game was working.
