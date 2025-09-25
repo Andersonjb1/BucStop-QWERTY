@@ -1,8 +1,0 @@
-Team Cooked Pull request policies:
-
-* Pull request creator will pull from Dev into their branch before creating new request, this will resolve some conflicts
-* Pull request creator will handle any remaining merge conflict resolutions
-* Requires 2 approvers, ideally these will be done quickly
-* After full approvals, anyone can merge but if there is merge conflicts remaining then the pull request creator will handle these and merging 
-* Before creating a new pull request, check if any existing pull requests are touching the same files and need to be merged first
-* Can use discord pings for any needed communication
