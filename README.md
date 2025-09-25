@@ -42,7 +42,7 @@ The application is built using a microservices architecture with the following c
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-org/BucStop-QWERTY.git
+   git clone https://github.com/Andersonjb1/BucStop-QWERTY.git
    cd BucStop-QWERTY
    ```
 
@@ -116,7 +116,7 @@ Visual Studio automatically handles:
 
 5. Clone the repository and start the services:
    ```bash
-   git clone https://github.com/<your-repo>/BucStop-QWERTY.git
+   git clone https://github.com/Andersonjb1/BucStop-QWERTY.git
    cd BucStop-QWERTY
    docker-compose up
    ```
