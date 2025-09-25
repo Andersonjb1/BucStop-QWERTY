@@ -35,7 +35,7 @@ The application is built using a microservices architecture with the following c
 ### Prerequisites
 
 - [Docker](https://www.docker.com/products/docker-desktop) and Docker Compose
-- [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0) (for development only)
+- [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) (for development only)
 - [Git](https://git-scm.com/downloads)
 
 ### Local Development (with containerization)
