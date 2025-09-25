@@ -18,7 +18,7 @@ The application is built using a microservices architecture with the following c
 - **API Gateway**: Orchestrates communication between the WebApp and game microservices
 - **Game Microservices**: Independent services for each game (Snake, Tetris, Pong)
 
-![Architecture Diagram](/Documentation/CookedGraph.png)
+![Architecture Diagram](/Documentation/Cooked Documentation/CookedGraph.png)
 
 ## Technologies
 
