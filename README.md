@@ -18,7 +18,7 @@ The application is built using a microservices architecture with the following c
 - **API Gateway**: Orchestrates communication between the WebApp and game microservices
 - **Game Microservices**: Independent services for each game (Snake, Tetris, Pong)
 
-![Architecture Diagram](/Documentation/CookedGraph.png)
+![Architecture Diagram](/Documentation/CookedDocumentation/CookedGraph.png)
 
 ## Technologies
 
@@ -35,14 +35,14 @@ The application is built using a microservices architecture with the following c
 ### Prerequisites
 
 - [Docker](https://www.docker.com/products/docker-desktop) and Docker Compose
-- [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0) (for development only)
+- [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) (for development only)
 - [Git](https://git-scm.com/downloads)
 
 ### Local Development (with containerization)
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-org/BucStop-QWERTY.git
+   git clone https://github.com/Andersonjb1/BucStop-QWERTY.git
    cd BucStop-QWERTY
    ```
 
@@ -116,7 +116,7 @@ Visual Studio automatically handles:
 
 5. Clone the repository and start the services:
    ```bash
-   git clone https://github.com/<your-repo>/BucStop-QWERTY.git
+   git clone https://github.com/Andersonjb1/BucStop-QWERTY.git
    cd BucStop-QWERTY
    docker-compose up
    ```
@@ -198,5 +198,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 * Original BucStop project that served as foundation from previous semesters
 * All contributors to the project from the most recent semester:
-	- @Christopher-Powers, @ChristopherOaks (other Chris), @Brofessortec, @nixonrs-bucs, @CurtisReece, @minknd, @Ismaelizzy, @Zach1204 
+
+	- @Teal_04, @rhanc, @LoftKl, @Andersonjb1, @T0xen, @JoeNeglia, @Kataruse, @Derek214, @K-Baker101020
+
 * Software Engineering II course instructor, Professor Kinser
