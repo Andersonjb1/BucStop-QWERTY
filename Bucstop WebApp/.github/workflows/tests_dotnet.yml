@@ -1,0 +1,61 @@
+name: .NET Tests (Dev-1 ready)
+
+on:
+  push:
+    branches: ["Dev-1"]          # Runs when code is pushed to Dev-1
+  pull_request:
+    branches: ["Dev-1"]          # Runs on PRs targeting Dev-1
+
+concurrency:
+  group: tests-${{ github.ref }} # Prevents overlapping runs on same branch
+  cancel-in-progress: true
+
+jobs:
+  dotnet-tests:
+    runs-on: ubuntu-latest       # GitHub’s Ubuntu VM
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4   # Pulls repo code into runner
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"   # Change if you use .NET 6/7
+
+      - id: detect
+        name: Detect *.Tests.csproj
+        shell: bash
+        run: |                      # Finds test projects
+          shopt -s nullglob
+          files=($(git ls-files '*Tests.csproj'))
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "has=false" >> $GITHUB_OUTPUT
+            echo "No .NET test projects found. Skipping."
+          else
+            printf '%s\n' "${files[@]}" > dotnet-test-projects.txt
+            echo "has=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build solution
+        if: steps.detect.outputs.has == 'true'
+        run: dotnet build --configuration Release --nologo
+
+      - name: Run tests
+        if: steps.detect.outputs.has == 'true'
+        run: |                      # Runs discovered test projects
+          while read -r proj; do
+            dotnet test "$proj" --configuration Release --no-build \
+              --collect:"XPlat Code Coverage" \
+              --logger "trx;LogFileName=test-results.trx"
+          done < dotnet-test-projects.txt
+
+      - name: Upload results (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:                         # Saves test results as artifacts
+          name: dotnet-test-results-${{ github.sha }}
+          path: |
+            **/TestResults/**/*.trx
+            **/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: ignore
