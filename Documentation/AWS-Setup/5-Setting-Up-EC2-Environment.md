@@ -29,7 +29,7 @@ sudo apt-get update
 ### 3.3 Install Docker Packages
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-### 3.4 Test if Docker is running
+### 3.5 Test if Docker is running
 - Run the command: `sudo systemctl status docker`
 - **Option 1:** If `docker.service` is enabled and active, you're good to continue (exit with q).
 - **Option 2:** If `docker.service` is not enabled or active, run the following command:
@@ -42,5 +42,12 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 1. ```git clone https://github.com/Andersonjb1/BucStop-QWERTY.git```
 2. ```cd BucStop-QWERTY```
 
-# 5. Build Application (**As of right now will not build correctly**)
+# 5. Setting Up Elastic IP
+1. Under `Scripts > deploy.sh`, note the `PUBLIC_IP`
+2. cd back into the BucStop-QWERTY directory
+3. Run the following command, replacing PUBLIC_IP with the IP found in `deploy.sh` and ELASTIC_IP with the EIP you made in step 4 `4-Elastic-IP` - `grep -rl "[PUBLIC_IP]" . | xargs sed -i 's/[PUBLIC_IP]/[ELASTIC_IP]/g'`
+   - _Note that in the `sed` command you must escape the "."_ (See example below)
+   - EX Command: `grep -rl "3.232.16.65" . | xargs sed -i 's/3\.232\.16\.65/54.175.113.189/g'`
+
+# 6. Build Application
 ```sudo env=containers docker compose up -d``` (-d runs the containers in the background)
