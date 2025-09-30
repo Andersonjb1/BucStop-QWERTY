@@ -6,7 +6,7 @@ export GIT_COMMIT=$(git rev-parse HEAD)
 # ─────────────────────────────────────────────────────────────
 
 # Prod IP, still figuring out how we want to manage dev IP not being static
-PUBLIC_IP="54.175.113.189"
+PUBLIC_IP="3.228.108.146"
 
 # Required CLI tools
 REQUIRED_CMDS=("git" "docker" "docker-compose")
@@ -39,7 +39,7 @@ cleanup() {
     # Create Snapshot 
     create_snapshot() {
     echo "📷  Creating snapshot..."
-    curl -X POST http://54.175.113.189:8080/snapshots/create -d "description=Automated snapshot before shutdown" 2>/dev/null
+    curl -X POST http://3.228.108.146:8080/snapshots/create -d "description=Automated snapshot before shutdown" 2>/dev/null
     }
 
     create_snapshot
