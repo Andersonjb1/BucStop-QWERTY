@@ -29,7 +29,7 @@ sudo apt-get update
 ### 3.3 Install Docker Packages
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-### 3.5 Test if Docker is running
+### 3.4 Test if Docker is running
 - Run the command: `sudo systemctl status docker`
 - **Option 1:** If `docker.service` is enabled and active, you're good to continue (exit with q).
 - **Option 2:** If `docker.service` is not enabled or active, run the following command:
