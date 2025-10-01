@@ -59,7 +59,7 @@ jobs:
 
     - name: Run Selenium Test
       run: |
-        python ./.automatedTests/V1_0_0_NavigationTest.py
+        python .automatedTests/V1_0_0_NavigationTest.py
 
     - name: Shutdown Containers
       if: always()
