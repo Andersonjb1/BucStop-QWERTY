@@ -1,0 +1,66 @@
+name: Automated Navigation Test
+
+on:
+  pull_request:
+    branches:
+      - main
+      - Dev-1
+      - Dev-2
+      - Dev-3
+      - Dev-4
+      - Dev-5
+      - Dev-6
+      - Dev-7
+      - Dev-8
+      - Dev-9
+      - Dev-10
+      - Dev-11
+      - Dev-12
+      - Sprint-1
+      - Sprint-2
+      - Sprint-3
+      - Sprint-4
+      - Sprint-5
+      - Sprint-6
+      - Sprint-7
+      - Sprint-8
+      - Sprint-9
+      - Sprint-10
+      - Sprint-11
+      - Sprint-12
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and Start Containers
+      run: |
+        docker compose up -d --build
+        # wait for server to start
+        sleep 10
+        docker ps -a
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium webdriver-manager
+
+    - name: Run Selenium Test
+      run: |
+        python ./.automatedTests/V1_0_0_NavigationTest.py
+
+    - name: Shutdown Containers
+      if: always()
+      run: docker compose down
