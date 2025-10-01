@@ -42,7 +42,7 @@ jobs:
 
     - name: Build and Start Containers
       run: |
-        ENV=containersLocal docker compose up -d --build
+        env=containersLocal docker compose up -d
         # wait for server to start
         sleep 10
         docker ps -a
