@@ -1,3 +1,5 @@
+CHANGE NAME TO "navigation-test.yml" to reactivate test
+
 name: Automated Navigation Test
 
 on:
