@@ -2,7 +2,7 @@ name: .NET Tests (Dev-1 ready)
 
 on:
   push:
-    branches: ["Dev-1"]          # Runs when code is pushed to Dev-1
+    branches: ["Dev-1"]          # Runs when code is pushed to Dev-1. Change this to whatever branch we want.
   pull_request:
     branches: ["Dev-1"]          # Runs on PRs targeting Dev-1
 
