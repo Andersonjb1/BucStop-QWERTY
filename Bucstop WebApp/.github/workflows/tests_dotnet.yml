@@ -1,59 +1,50 @@
-name: .NET Tests (Dev-1 ready)
+name: .NET Tests (any branch, PR + post-merge)
 
 on:
-  push:
-    branches: ["Dev-1"]          # Runs when code is pushed to Dev-1. Change this to whatever branch we want.
   pull_request:
-    branches: ["Dev-1"]          # Runs on PRs targeting Dev-1
+    branches: ["**"]                          # Tests after pull request is made in any target branch.
+    types: [opened, synchronize, reopened, ready_for_review, closed]
+  push:
+    branches: ["**"]                          # merge commits and direct pushes
 
 concurrency:
-  group: tests-${{ github.ref }} # Prevents overlapping runs on same branch
+  group: tests-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   dotnet-tests:
-    runs-on: ubuntu-latest       # GitHub’s Ubuntu VM
+    runs-on: ubuntu-latest
+    # If this is a PR-closed event but NOT merged, skip; otherwise run.
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' || github.event.pull_request.merged == true }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4   # Pulls repo code into runner
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"   # Change if you use .NET 6/7
-
-      - id: detect
-        name: Detect *.Tests.csproj
+      # discover & run (all tests for simplicity; you can drop in your affected-only logic)
+      - id: list_tests
         shell: bash
-        run: |                      # Finds test projects
+        run: |
           shopt -s nullglob
-          files=($(git ls-files '*Tests.csproj'))
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "has=false" >> $GITHUB_OUTPUT
-            echo "No .NET test projects found. Skipping."
-          else
-            printf '%s\n' "${files[@]}" > dotnet-test-projects.txt
-            echo "has=true" >> $GITHUB_OUTPUT
-          fi
+          mapfile -t TESTS < <(git ls-files '*Tests.csproj')
+          if [ ${#TESTS[@]} -eq 0 ]; then echo "none=true" >> $GITHUB_OUTPUT; else printf '%s\n' "${TESTS[@]}" > tests.txt; echo "none=false" >> $GITHUB_OUTPUT; fi
 
-      - name: Build solution
-        if: steps.detect.outputs.has == 'true'
+      - if: steps.list_tests.outputs.none == 'false'
         run: dotnet build --configuration Release --nologo
 
-      - name: Run tests
-        if: steps.detect.outputs.has == 'true'
-        run: |                      # Runs discovered test projects
+      - if: steps.list_tests.outputs.none == 'false'
+        shell: bash
+        run: |
           while read -r proj; do
-            dotnet test "$proj" --configuration Release --no-build \
-              --collect:"XPlat Code Coverage" \
-              --logger "trx;LogFileName=test-results.trx"
-          done < dotnet-test-projects.txt
+            echo "==> dotnet test $proj"
+            dotnet test "$proj" --configuration Release --no-build --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test-results.trx"
+          done < tests.txt
 
-      - name: Upload results (if any)
-        if: always()
+      - if: always()
         uses: actions/upload-artifact@v4
-        with:                         # Saves test results as artifacts
+        with:
           name: dotnet-test-results-${{ github.sha }}
           path: |
             **/TestResults/**/*.trx
