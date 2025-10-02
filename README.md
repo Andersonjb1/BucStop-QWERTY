@@ -197,7 +197,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 * Original BucStop project that served as foundation from previous semesters
-* All contributors to the project from the most recent semester:
+* Contributors to the project from the most recent semester:
 
 	- @Teal_04, @rhanc, @LoftKl, @Andersonjb1, @T0xen, @JoeNeglia, @Kataruse, @Derek214, @K-Baker101020
 
