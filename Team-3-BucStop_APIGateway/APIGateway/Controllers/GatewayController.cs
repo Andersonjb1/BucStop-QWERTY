@@ -52,7 +52,7 @@ namespace Gateway
                     var publicUrl = _config[$"PublicUrls:{game}"];
                     var jsPath = $"/js/{game.ToLowerInvariant()}.js";
 
-                    fetchTasks.Add(FetchGameInfo(internalUrl, $"/{game}", publicUrl + jsPath));
+                    fetchTasks.Add(FetchGameInfo(internalUrl, $"/{game}", internalUrl + jsPath));
                 }
 
                 await Task.WhenAll(fetchTasks);
