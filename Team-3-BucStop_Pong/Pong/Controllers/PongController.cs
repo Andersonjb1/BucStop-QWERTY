@@ -30,28 +30,36 @@ namespace Pong
         private static readonly List<GameInfo> TheInfo = new List<GameInfo>
         {
             new GameInfo {
-                Id = 3,
-                Title = "Pong",
-                //Content = "~/js/pong.js",
-                //Content = "https://localhost:1941/js/pong.js",
-                Content = gameURL,
-                Author = "Fall 2023 Semester",
-                DateAdded = "",
-                Description = "Pong is a classic arcade game where the player uses a paddle to hit a ball against a computer's paddle. Either party scores when the ball makes it past the opponent's paddle.",
-                HowTo = "Control with arrow keys.",
-                //Thumbnail = "/images/pong.jpg"
-                Thumbnail = imgURL
+            Id = 3,
+            Title = "Pong",
+            Content = null, // Will be set dynamically
+            Author = "Fall 2023 Semester",
+            DateAdded = "",
+            Description = "Pong is a classic arcade game where the player uses a paddle to hit a ball against a computer's paddle. Either party scores when the ball makes it past the opponent's paddle.",
+            HowTo = "Control with arrow keys.",
+            Thumbnail = imgURL
             }
-
         };
 
         [HttpGet]
-        public IEnumerable<GameInfo> Get()
+        public async Task<IEnumerable<GameInfo>> Get()
         {
-            // Confirm the Content and Thumbnail URLs are assigned if they were not available when initialized
-            if (TheInfo[0].Content == null)
+            // Fetch the JavaScript code from the gameURL
+            if (string.IsNullOrEmpty(TheInfo[0].Content))
             {
-                TheInfo[0].Content = gameURL;
+                using (var httpClient = new HttpClient())
+                {
+                    try
+                    {
+                        var jsCode = await httpClient.GetStringAsync(gameURL);
+                        TheInfo[0].Content = jsCode;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to fetch JS code from {GameUrl}", gameURL);
+                        TheInfo[0].Content = "// Failed to load game code";
+                    }
+                }
             }
 
             if (TheInfo[0].Thumbnail == null)
