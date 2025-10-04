@@ -33,10 +33,6 @@ Start multiple specified profiles -
 Start up every profile -
 ```docker compose --profile “*” up```
 
-Figure 1 - "games" Profile Tied to Snake
- 
-Figure 2 - Multiple Profiles Tied to a Service
-
 ## Helpful Sources
 
 Using profiles with Compose -
