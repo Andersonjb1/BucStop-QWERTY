@@ -1,3 +1,4 @@
+version: 1.0.0
 services:
   bucstop:
     build:
@@ -69,6 +70,23 @@ services:
     networks:
       - bucstop-network
 
+  submission-gateway:
+    # Uncomment the following next 3 lines once the code for the Submission Gateway is added.
+    #build:
+    #context: ./BucStop_SubmissionGateway/SubmissionGateway
+    #dockerfile: Dockerfile
+    # Using a placeholder "hello world" image since there isn't code to build yet.
+    image: "hello-world" # This line should be deleted once Submission Gateway is implemented.
+    container_name: submission-gateway
+    ports:
+      - "8085:80"
+    networks:
+      - bucstop-network
+    environment:
+      - DOTNET_ENVIRONMENT=${env:-containers}
+    volumes:
+      - submission-data:/app/Submissions
+
 networks:
   bucstop-network:
     driver: bridge
@@ -77,4 +95,6 @@ volumes:
   snapshots-data:
     driver: local
   logs-data:
+    driver: local
+  submission-data:
     driver: local
