@@ -44,7 +44,7 @@ jobs:
       run: |
         env=containersLocal docker compose up -d
         # wait for server to start
-        sleep 10
+        docker compose wait
         docker ps -a
 
     - name: Setup Python
