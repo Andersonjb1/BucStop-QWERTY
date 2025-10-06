@@ -42,10 +42,13 @@ jobs:
 
     - name: Build and Start Containers
       run: |
-        env=containersLocal docker compose up -d
-        # wait for server to start
-        docker compose wait
-        docker ps -a
+         timeout 300s bash -c '
+           env=containersLocal docker compose up -d
+           echo "Waiting for containers to start..."
+           docker compose wait || echo "docker compose wait timed out or failed"
+         ' 
+         sleep 5
+         docker ps -a || true
 
     - name: Setup Python
       uses: actions/setup-python@v5
