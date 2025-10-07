@@ -28,7 +28,6 @@ on:
       - Sprint-10
       - Sprint-11
       - Sprint-12
-      - Nick-117
 
 jobs:
   test:
