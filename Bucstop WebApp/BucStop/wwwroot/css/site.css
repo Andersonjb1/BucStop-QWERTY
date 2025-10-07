@@ -129,7 +129,17 @@ label {
     -ms-transform: translate(-50%, -50%);
 }
 
-
+.todo {
+  background-color: #FF4136; /* bright red background */
+  color: #fff; /* white text */
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  font-family: monospace;
+  box-shadow: 0 0 6px rgba(255, 65, 54, 0.7);
+  animation: pulseTodo 1.5s infinite alternate;
+}
 
 
    
