@@ -190,9 +190,9 @@ try:
     add_link.click()
 
     time.sleep(1)
-    headers = driver.find_elements(By.XPATH, "//h1[text()='Game Criteria']")
+    headers = driver.find_elements(By.XPATH, "//h1[text()='Game Submission & Creator Guide']")
     print(f"Headers: {headers}")
-    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Game Criteria' on this page"
+    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Game Submission & Creator Guide' on this page"
 
     # 13) Logout
     print("13) Logging out of Product...")
