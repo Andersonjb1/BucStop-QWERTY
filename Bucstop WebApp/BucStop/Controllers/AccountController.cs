@@ -58,10 +58,11 @@ namespace BucStop.Controllers
             //ToLower added to remove case sensitivity. Current Font makes all lettering look like capital letters.
             if (Regex.IsMatch(email.ToLower(), @"\b[A-Za-z0-9._%+-]+@etsu\.edu\b"))
             {
+                string maskedEmail = MaskEmail(email);
                 // If authentication is successful, create a ClaimsPrincipal and sign in the user
                 var claims = new[]
                 {
-                    new Claim(ClaimTypes.Name, email),
+                    new Claim(ClaimTypes.Name, maskedEmail),
                     new Claim(ClaimTypes.NameIdentifier, "user_id"),
                 };
 
