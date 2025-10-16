@@ -55,14 +55,15 @@ namespace BucStop.Controllers
                 return View();
             }
 
+            string maskedEmail = MaskEmail(email);
             //ToLower added to remove case sensitivity. Current Font makes all lettering look like capital letters.
             if (Regex.IsMatch(email.ToLower(), @"\b[A-Za-z0-9._%+-]+@etsu\.edu\b"))
             {
-                string maskedEmail = MaskEmail(email);
+                string localMaskedEmail = MaskEmail(email);
                 // If authentication is successful, create a ClaimsPrincipal and sign in the user
                 var claims = new[]
                 {
-                    new Claim(ClaimTypes.Name, maskedEmail),
+                    new Claim(ClaimTypes.Name, localMaskedEmail),
                     new Claim(ClaimTypes.NameIdentifier, "user_id"),
                 };
 
@@ -74,7 +75,7 @@ namespace BucStop.Controllers
 
                 stopwatch.Stop();
 
-                _logger.LogInformation("{Category}: {User} successfully logged in.", "UserActivity", MaskEmail(email));
+                _logger.LogInformation("{Category}: {MaskedEmail} successfully logged in.", "UserActivity", localMaskedEmail);
                 _logger.LogInformation("{Category}: Successful Login Page Loaded in {LoadTime}ms.", "PageLoadTimes", stopwatch.ElapsedMilliseconds);
 
                 return RedirectToAction("Index", "Home");
@@ -82,7 +83,7 @@ namespace BucStop.Controllers
             else
             {
                 // Authentication failed, return to the login page with an error message
-                _logger.LogWarning("{Category}: Invalid login attempt for {Email}", "InvalidLogin", MaskEmail(email));
+                _logger.LogWarning("{Category}: Invalid login attempt for {Email}", "InvalidLogin", maskedEmail);
                 ModelState.AddModelError(string.Empty, "Only ETSU students can play, sorry :(");
 
                 stopwatch.Stop();
