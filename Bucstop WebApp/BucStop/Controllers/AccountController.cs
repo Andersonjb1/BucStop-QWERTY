@@ -13,6 +13,19 @@ namespace BucStop.Controllers
 
         private readonly ILogger<AccountController> _logger;
 
+        // Following method is to solve a security issue, but CIDR blocks should work so we shouldn't even need emails in the next sprint or 2
+        // Helper method to mask email addresses for logs
+        private string MaskEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return "";
+            var atIdx = email.IndexOf('@');
+            if (atIdx <= 1)
+                return "***" + email.Substring(atIdx);
+            // show first letter, mask rest before @
+            return email.Substring(0, 1) + "***" + email.Substring(atIdx);
+        }
+
         public AccountController(ILogger<AccountController> logger)
         {
             _logger = logger;
@@ -60,7 +73,7 @@ namespace BucStop.Controllers
 
                 stopwatch.Stop();
 
-                _logger.LogInformation("{Category}: {User} successfully logged in.", "UserActivity", email);
+                _logger.LogInformation("{Category}: {User} successfully logged in.", "UserActivity", MaskEmail(email));
                 _logger.LogInformation("{Category}: Successful Login Page Loaded in {LoadTime}ms.", "PageLoadTimes", stopwatch.ElapsedMilliseconds);
 
                 return RedirectToAction("Index", "Home");
@@ -68,7 +81,7 @@ namespace BucStop.Controllers
             else
             {
                 // Authentication failed, return to the login page with an error message
-                _logger.LogWarning("{Category}: Invalid login attempt for {Email}", "InvalidLogin", email);
+                _logger.LogWarning("{Category}: Invalid login attempt for {Email}", "InvalidLogin", MaskEmail(email));
                 ModelState.AddModelError(string.Empty, "Only ETSU students can play, sorry :(");
 
                 stopwatch.Stop();
