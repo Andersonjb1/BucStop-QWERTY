@@ -39,8 +39,8 @@ jobs:
         with:
           filters: |
             webapp:
-              - ''BucStop WebApp'/Bucstop/**'
-              - ''BucStop WebApp'/**'
+              - 'BucStop WebApp/Bucstop/**'
+              - 'BucStop WebApp/**'
               - 'Bucstop/**'
             gateway:
               - 'Team-3-BucStop_APIGateway/APIGateway/**'
