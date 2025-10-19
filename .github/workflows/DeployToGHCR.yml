@@ -95,6 +95,7 @@ jobs:
       - name: Resolve service paths
         id: set-path
         run: |
+          echo "IMAGE_NAMESPACE=${IMAGE_NAMESPACE,,}" >> $GITHUB_ENV
           svc=${{ matrix.service }}
           case "$svc" in
             webapp)
@@ -169,6 +170,7 @@ jobs:
       - name: Check & build missing images
         shell: bash
         run: |
+          echo "IMAGE_NAMESPACE=${IMAGE_NAMESPACE,,}" >> $GITHUB_ENV
           set -euo pipefail
 
           # canonical list of services
