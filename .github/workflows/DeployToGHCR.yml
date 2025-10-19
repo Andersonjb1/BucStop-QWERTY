@@ -83,7 +83,7 @@ jobs:
       - name: To Lowercase
         id: set
         env:
-          INPUT: ${{ github.repository_owner }}
+          INPUT: ${{ github.repository }}
         run: |
           ns="${INPUT,,}"
           echo "namespace=${ns}" >> "$GITHUB_OUTPUT"
