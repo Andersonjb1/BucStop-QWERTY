@@ -39,8 +39,8 @@ jobs:
         with:
           filters: |
             webapp:
-              - 'BucStop WebApp/Bucstop/**'
-              - 'BucStop WebApp/**'
+              - ''BucStop WebApp'/Bucstop/**'
+              - ''BucStop WebApp'/**'
               - 'Bucstop/**'
             gateway:
               - 'Team-3-BucStop_APIGateway/APIGateway/**'
@@ -85,7 +85,7 @@ jobs:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
     env:
       GHCR_REGISTRY: ghcr.io
-      IMAGE_NAMESPACE: ${{ github.repository_owner }}
+      IMAGE_NAMESPACE: ${{ toLower(github.repository_owner) }}
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
@@ -95,12 +95,11 @@ jobs:
       - name: Resolve service paths
         id: set-path
         run: |
-          echo "IMAGE_NAMESPACE=${IMAGE_NAMESPACE,,}" >> $GITHUB_ENV
           svc=${{ matrix.service }}
           case "$svc" in
             webapp)
-              path="BucStop WebApp/Bucstop"
-              dockerfile="BucStop WebApp/Bucstop/Dockerfile"
+              path="'BucStop WebApp'/Bucstop"
+              dockerfile="'BucStop WebApp'/Bucstop/Dockerfile"
               ;;
             gateway)
               path="Team-3-BucStop_APIGateway/APIGateway"
@@ -152,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GHCR_REGISTRY: ghcr.io
-      IMAGE_NAMESPACE: ${{ github.repository_owner }}
+      IMAGE_NAMESPACE: ${{ toLower(github.repository_owner) }}
     steps:
       - name: Checkout default branch (for building missing images)
         uses: actions/checkout@v4
@@ -179,7 +178,7 @@ jobs:
           # mapping function: return directory for a service name
           get_dir() {
             case "$1" in
-              webapp)  echo "BucStop WebApp/Bucstop" ;;
+              webapp)  echo "'BucStop WebApp'/Bucstop" ;;
               gateway) echo "Team-3-BucStop_APIGateway/APIGateway" ;;
               snake)   echo "Team-3-BucStop_Snake/Snake" ;;
               pong)    echo "Team-3-BucStop_Pong/Pong" ;;
