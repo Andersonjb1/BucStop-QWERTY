@@ -74,9 +74,23 @@ jobs:
           PONG: ${{ steps.filter.outputs.pong }}
           TETRIS: ${{ steps.filter.outputs.tetris }}
 
+  set-namespace:
+    name: Set Namespace
+    runs-on: ubuntu-latest
+    outputs:
+      namespace: ${{ steps.set.outputs.namespace }}
+    steps:
+      - name: To Lowercase
+        id: set
+        env:
+          INPUT: ${{ github.repository_owner }}
+        run: |
+          ns="${INPUT,,}"
+          echo "namespace=${ns}" >> "$GITHUB_OUTPUT"
+
   build-changed:
     name: Build & push changed microservice images
-    needs: detect-changes
+    needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
     if: ${{ fromJson(needs.detect-changes.outputs.services || '[]').length >= 1 }}
     strategy:
@@ -85,7 +99,7 @@ jobs:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
     env:
       GHCR_REGISTRY: ghcr.io
-      IMAGE_NAMESPACE: ${{ toLower(github.repository_owner) }}
+      IMAGE_NAMESPACE: ${{ needs.set-namespace.outputs.namespace }}
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
@@ -147,11 +161,11 @@ jobs:
 
   ensure-all-images:
     name: Ensure all 5 images exist in GHCR (build missing ones from default branch)
-    needs: detect-changes
+    needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
     env:
       GHCR_REGISTRY: ghcr.io
-      IMAGE_NAMESPACE: ${{ toLower(github.repository_owner) }}
+      IMAGE_NAMESPACE: ${{ needs.set-namespace.outputs.namespace }}
     steps:
       - name: Checkout default branch (for building missing images)
         uses: actions/checkout@v4
