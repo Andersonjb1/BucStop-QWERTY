@@ -112,8 +112,8 @@ jobs:
           svc=${{ matrix.service }}
           case "$svc" in
             webapp)
-              path="BucStop WebApp/BucStop"
-              dockerfile="BucStop WebApp/BucStop/Dockerfile"
+              path="BucStop_WebApp/BucStop"
+              dockerfile="BucStop_WebApp/BucStop/Dockerfile"
               ;;
             gateway)
               path="Team-3-BucStop_APIGateway/APIGateway"
@@ -218,7 +218,7 @@ jobs:
           # mapping function: return directory for a service name
           get_dir() {
             case "$1" in
-              webapp)  echo "BucStop WebApp/BucStop" ;;
+              webapp)  echo "BucStop_WebApp/BucStop" ;;
               gateway) echo "Team-3-BucStop_APIGateway/APIGateway" ;;
               snake)   echo "Team-3-BucStop_Snake/Snake" ;;
               pong)    echo "Team-3-BucStop_Pong/Pong" ;;
@@ -256,8 +256,14 @@ jobs:
             tag_ref="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:${{ steps.choose_ref.outputs.ref }}"
             echo "Building $svc from $dir -> $tag_latest, $tag_ref"
             docker build -t "${tag_latest}" -t "${tag_ref}" -f "${dockerfile}" "${dir}"
+            echo "Forcing Action to Build BucStop WebApp"
             docker push "${tag_latest}"
             docker push "${tag_ref}"
+            # TODO: Delete When Done
+            docker build -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest" -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}" -f "Bucstop WebApp/BucStop/Dockerfile" "Bucstop WebApp/BucStop"
+            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest"
+            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}"
+            #######################
           done
 
       - name: Done
