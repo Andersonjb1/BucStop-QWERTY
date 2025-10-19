@@ -78,7 +78,7 @@ jobs:
     name: Build & push changed microservice images
     needs: detect-changes
     runs-on: ubuntu-latest
-    if: ${{ fromJson(needs.detect-changes.outputs.services).length > 0 }}
+    if: ${{ fromJson(needs.detect-changes.outputs.services || '[]').length >= 1 }}
     strategy:
       fail-fast: false
       matrix:
