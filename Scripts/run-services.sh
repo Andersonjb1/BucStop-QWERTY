@@ -54,12 +54,12 @@ start_microservice "API-Gateway" "Team-3-BucStop_APIGateway/APIGateway" 8081
 echo "Waiting for API Gateway to initialize..."
 sleep 5
 
-# Start main BucStop WebApp
-start_microservice "BucStop-WebApp" "Bucstop WebApp/BucStop" 8080
+# Start main BucStop-WebApp
+start_microservice "BucStop-WebApp" "BucStop-WebApp/BucStop" 8080
 
 echo -e "\n${GREEN}All services are starting up...${NC}"
 echo -e "${YELLOW}Service endpoints:${NC}"
-echo -e "${GRAY}- BucStop WebApp: http://localhost:8080${NC}"
+echo -e "${GRAY}- BucStop-WebApp: http://localhost:8080${NC}"
 echo -e "${GRAY}- API Gateway:    http://localhost:8081${NC}"
 echo -e "${GRAY}- Snake Game:     http://localhost:8082${NC}"
 echo -e "${GRAY}- Pong Game:      http://localhost:8083${NC}"

@@ -24,7 +24,7 @@ git clone https://github.com/Christopher-Powers/BucStop-Goofin.git
 You have two options to run the application:
 
 **Option A: Command Line**
-1. Navigate to `Bucstop-Goofin/BucStop WebApp/BucStop/` in your command line interface
+1. Navigate to `Bucstop-Goofin/BucStop-WebApp/BucStop/` in your command line interface
 2. Run the following command:
    ```bash
    dotnet run

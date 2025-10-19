@@ -140,7 +140,7 @@ env=containers docker-compose up -d
 
 ```
 BucStop-QWERTY/
-├── Bucstop WebApp/            # Main web application
+├── BucStop-WebApp/            # Main web application
 │   └── BucStop/
 │       ├── Controllers/       # MVC controllers
 │       ├── Views/             # UI templates
