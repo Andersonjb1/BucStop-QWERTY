@@ -112,8 +112,8 @@ jobs:
           svc=${{ matrix.service }}
           case "$svc" in
             webapp)
-              path="BucStop WebApp/BucStop"
-              dockerfile="BucStop WebApp/BucStop/Dockerfile"
+              path="BucStop_WebApp/BucStop"
+              dockerfile="BucStop_WebApp/BucStop/Dockerfile"
               ;;
             gateway)
               path="Team-3-BucStop_APIGateway/APIGateway"
@@ -218,7 +218,7 @@ jobs:
           # mapping function: return directory for a service name
           get_dir() {
             case "$1" in
-              webapp)  echo "BucStop WebApp/BucStop" ;;
+              webapp)  echo "BucStop_WebApp/BucStop" ;;
               gateway) echo "Team-3-BucStop_APIGateway/APIGateway" ;;
               snake)   echo "Team-3-BucStop_Snake/Snake" ;;
               pong)    echo "Team-3-BucStop_Pong/Pong" ;;
