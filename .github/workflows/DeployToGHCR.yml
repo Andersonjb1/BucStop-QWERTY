@@ -6,7 +6,7 @@
 # - Ensures at the end that all 5 service images exist in GHCR (builds any missing ones from the default branch)
 #
 # Services:
-# - webapp  -> "BucStop_WebApp/Bucstop/"
+# - webapp  -> "BucStop_WebApp/BucStop/"
 # - gateway -> "Team-3-BucStop_APIGateway/APIGateway/"
 # - snake   -> "Team-3-BucStop_Snake/Snake/"
 # - pong    -> "Team-3-BucStop_Pong/Pong/"
@@ -39,9 +39,9 @@ jobs:
         with:
           filters: |
             webapp:
-              - 'BucStop_WebApp/Bucstop/**'
+              - 'BucStop_WebApp/BucStop/**'
               - 'BucStop_WebApp/**'
-              - 'Bucstop/**'
+              - 'BucStop/**'
             gateway:
               - 'Team-3-BucStop_APIGateway/APIGateway/**'
               - 'Team-3-BucStop_APIGateway/**'
@@ -112,8 +112,8 @@ jobs:
           svc=${{ matrix.service }}
           case "$svc" in
             webapp)
-              path="BucStop_WebApp/Bucstop"
-              dockerfile="BucStop_WebApp/Bucstop/Dockerfile"
+              path="BucStop_WebApp/BucStop"
+              dockerfile="BucStop_WebApp/BucStop/Dockerfile"
               ;;
             gateway)
               path="Team-3-BucStop_APIGateway/APIGateway"
@@ -218,7 +218,7 @@ jobs:
           # mapping function: return directory for a service name
           get_dir() {
             case "$1" in
-              webapp)  echo "BucStop_WebApp/Bucstop" ;;
+              webapp)  echo "BucStop_WebApp/BucStop" ;;
               gateway) echo "Team-3-BucStop_APIGateway/APIGateway" ;;
               snake)   echo "Team-3-BucStop_Snake/Snake" ;;
               pong)    echo "Team-3-BucStop_Pong/Pong" ;;
