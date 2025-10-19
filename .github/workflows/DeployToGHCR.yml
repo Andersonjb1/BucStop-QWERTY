@@ -113,7 +113,7 @@ jobs:
           case "$svc" in
             webapp)
               path="BucStop_WebApp/Bucstop"
-              dockerfile="'BucStop_WebApp'/Bucstop/Dockerfile"
+              dockerfile="BucStop_WebApp/Bucstop/Dockerfile"
               ;;
             gateway)
               path="Team-3-BucStop_APIGateway/APIGateway"
