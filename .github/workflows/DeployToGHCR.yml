@@ -1,0 +1,223 @@
+# Build changed microservice images on PRs to Sprint-* and ensure all 5 images exist in GHCR
+#
+# - Triggers on pull_request to branches matching Sprint-*
+# - Detects which of the five microservice directories changed
+# - Builds & pushes images for changed services to GHCR
+# - Ensures at the end that all 5 service images exist in GHCR (builds any missing ones from the default branch)
+#
+# Services:
+# - webapp  -> "BucStop WebApp/Bucstop/"
+# - gateway -> "Team-3-BucStop_APIGateway/APIGateway/"
+# - snake   -> "Team-3-BucStop_Snake/Snake/"
+# - pong    -> "Team-3-BucStop_Pong/Pong/"
+# - tetris  -> "Team-3-BucStop_Tetris/Tetris/"
+
+on:
+  push:
+    branches:
+      - "Sprint-*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  detect-changes:
+    name: Detect changed microservices
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.services-json.outputs.services }}
+    steps:
+      - name: Checkout PR branch (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            webapp:
+              - 'BucStop WebApp/Bucstop/**'
+              - 'BucStop WebApp/**'
+              - 'Bucstop/**'
+            gateway:
+              - 'Team-3-BucStop_APIGateway/APIGateway/**'
+              - 'Team-3-BucStop_APIGateway/**'
+            snake:
+              - 'Team-3-BucStop_Snake/Snake/**'
+              - 'Team-3-BucStop_Snake/**'
+            pong:
+              - 'Team-3-BucStop_Pong/Pong/**'
+              - 'Team-3-BucStop_Pong/**'
+            tetris:
+              - 'Team-3-BucStop_Tetris/Tetris/**'
+              - 'Team-3-BucStop_Tetris/**'
+
+      - name: Produce JSON array of changed services
+        id: services-json
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const changed = [];
+            if (process.env.WEBAPP === 'true') changed.push('webapp');
+            if (process.env.GATEWAY === 'true') changed.push('gateway');
+            if (process.env.SNAKE === 'true') changed.push('snake');
+            if (process.env.PONG === 'true') changed.push('pong');
+            if (process.env.TETRIS === 'true') changed.push('tetris');
+            return { services: JSON.stringify(changed) };
+        env:
+          WEBAPP: ${{ steps.filter.outputs.webapp }}
+          GATEWAY: ${{ steps.filter.outputs.gateway }}
+          SNAKE: ${{ steps.filter.outputs.snake }}
+          PONG: ${{ steps.filter.outputs.pong }}
+          TETRIS: ${{ steps.filter.outputs.tetris }}
+
+  build-changed:
+    name: Build & push changed microservice images
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    if: ${{ fromJson(needs.detect-changes.outputs.services).length > 0 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    env:
+      GHCR_REGISTRY: ghcr.io
+      IMAGE_NAMESPACE: ${{ github.repository_owner }}
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve service paths
+        id: set-path
+        run: |
+          svc=${{ matrix.service }}
+          case "$svc" in
+            webapp)
+              path="BucStop WebApp/Bucstop"
+              dockerfile="BucStop WebApp/Bucstop/Dockerfile"
+              ;;
+            gateway)
+              path="Team-3-BucStop_APIGateway/APIGateway"
+              dockerfile="Team-3-BucStop_APIGateway/APIGateway/Dockerfile"
+              ;;
+            snake)
+              path="Team-3-BucStop_Snake/Snake"
+              dockerfile="Team-3-BucStop_Snake/Snake/Dockerfile"
+              ;;
+            pong)
+              path="Team-3-BucStop_Pong/Pong"
+              dockerfile="Team-3-BucStop_Pong/Pong/Dockerfile"
+              ;;
+            tetris)
+              path="Team-3-BucStop_Tetris/Tetris"
+              dockerfile="Team-3-BucStop_Tetris/Tetris/Dockerfile"
+              ;;
+            *)
+              echo "Unknown service: $svc"
+              exit 1
+              ;;
+          esac
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+          echo "dockerfile=$dockerfile" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push image for service
+        uses: docker/build-push-action@v4
+        with:
+          context: ${{ steps.set-path.outputs.path }}
+          file: ${{ steps.set-path.outputs.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:pr-${{ github.event.number }}
+            ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:${{ github.head_ref || github.ref_name }}
+            ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:latest
+          cache-from: type=registry,ref=${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:cache
+          cache-to: type=inline
+
+  ensure-all-images:
+    name: Ensure all 5 images exist in GHCR (build missing ones from default branch)
+    needs: [build-changed, detect-changes]
+    runs-on: ubuntu-latest
+    env:
+      GHCR_REGISTRY: ghcr.io
+      IMAGE_NAMESPACE: ${{ github.repository_owner }}
+    steps:
+      - name: Checkout default branch (for building missing images)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check & build missing images
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # canonical list of services
+          services=(webapp gateway snake pong tetris)
+
+          # mapping function: return directory for a service name
+          get_dir() {
+            case "$1" in
+              webapp)  echo "BucStop WebApp/Bucstop" ;;
+              gateway) echo "Team-3-BucStop_APIGateway/APIGateway" ;;
+              snake)   echo "Team-3-BucStop_Snake/Snake" ;;
+              pong)    echo "Team-3-BucStop_Pong/Pong" ;;
+              tetris)  echo "Team-3-BucStop_Tetris/Tetris" ;;
+              *) echo "" ;;
+            esac
+          }
+
+          missing=()
+          for svc in "${services[@]}"; do
+            image="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:latest"
+            echo "Checking ${image}..."
+            if docker pull "${image}" > /dev/null 2>&1; then
+              echo "Exists: ${image}"
+            else
+              echo "Missing: ${image}"
+              missing+=("${svc}")
+            fi
+          done
+
+          if [ ${#missing[@]} -eq 0 ]; then
+            echo "All images already present in GHCR."
+            exit 0
+          fi
+
+          echo "Will build missing images from default branch: ${missing[*]}"
+          for svc in "${missing[@]}"; do
+            dir="$(get_dir "$svc")"
+            dockerfile="${dir}/Dockerfile"
+            if [ ! -f "$dockerfile" ]; then
+              echo "Warning: Dockerfile not found for $svc at $dockerfile — skipping"
+              continue
+            fi
+            tag_latest="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:latest"
+            tag_branch="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:${{ github.event.repository.default_branch }}"
+            echo "Building $svc from $dir -> $tag_latest, $tag_branch"
+            docker build -t "${tag_latest}" -t "${tag_branch}" -f "${dockerfile}" "${dir}"
+            docker push "${tag_latest}"
+            docker push "${tag_branch}"
+          done
+
+      - name: Done
+        run: echo "Ensure step complete."
