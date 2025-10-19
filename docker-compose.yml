@@ -1,3 +1,4 @@
+# VERSION 1.0.0 #
 services:
   bucstop:
     build:
@@ -9,7 +10,7 @@ services:
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+      - DOTNET_ENVIRONMENT=${env:-containers}
       - GIT_COMMIT_HASH=${GIT_COMMIT:-unknown}
     depends_on:
       - api-gateway
@@ -27,7 +28,7 @@ services:
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+      - DOTNET_ENVIRONMENT=${env:-containers}
     depends_on:
       - snake
       - pong
@@ -39,7 +40,7 @@ services:
       dockerfile: Dockerfile
     container_name: game-snake
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+      - DOTNET_ENVIRONMENT=${env:-containers}
     ports:
       - "8082:80" # Expose Snake microservice on localhost:8082
     networks:
@@ -51,7 +52,7 @@ services:
       dockerfile: Dockerfile
     container_name: game-pong
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+      - DOTNET_ENVIRONMENT=${env:-containers}
     ports:
       - "8083:80" # Expose Pong microservice on localhost:8083
     networks:
@@ -63,11 +64,28 @@ services:
       dockerfile: Dockerfile
     container_name: game-tetris
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+      - DOTNET_ENVIRONMENT=${env:-containers}
     ports:
       - "8084:80" # Expose Tetris microservice on localhost:8084
     networks:
       - bucstop-network
+
+  submission-gateway:
+    # Uncomment the following next 3 lines once the code for the Submission Gateway is added.
+    #build:
+    #context: ./BucStop_SubmissionGateway/SubmissionGateway
+    #dockerfile: Dockerfile
+    # Using a placeholder "hello world" image since there isn't code to build yet.
+    image: "hello-world" # This line should be deleted once Submission Gateway is implemented.
+    container_name: submission-gateway
+    ports:
+      - "8085:80"
+    networks:
+      - bucstop-network
+    environment:
+      - DOTNET_ENVIRONMENT=${env:-containers}
+    volumes:
+      - submission-data:/app/Submissions
 
 networks:
   bucstop-network:
@@ -77,4 +95,6 @@ volumes:
   snapshots-data:
     driver: local
   logs-data:
+    driver: local
+  submission-data:
     driver: local
