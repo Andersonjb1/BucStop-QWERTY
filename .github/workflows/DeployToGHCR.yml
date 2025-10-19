@@ -6,7 +6,7 @@
 # - Ensures at the end that all 5 service images exist in GHCR (builds any missing ones from the default branch)
 #
 # Services:
-# - webapp  -> "BucStop-WebApp/Bucstop/"
+# - webapp  -> "BucStop_WebApp/Bucstop/"
 # - gateway -> "Team-3-BucStop_APIGateway/APIGateway/"
 # - snake   -> "Team-3-BucStop_Snake/Snake/"
 # - pong    -> "Team-3-BucStop_Pong/Pong/"
@@ -39,8 +39,8 @@ jobs:
         with:
           filters: |
             webapp:
-              - 'BucStop-WebApp/Bucstop/**'
-              - 'BucStop-WebApp/**'
+              - 'BucStop_WebApp/Bucstop/**'
+              - 'BucStop_WebApp/**'
               - 'Bucstop/**'
             gateway:
               - 'Team-3-BucStop_APIGateway/APIGateway/**'
@@ -112,8 +112,8 @@ jobs:
           svc=${{ matrix.service }}
           case "$svc" in
             webapp)
-              path="BucStop-WebApp/Bucstop"
-              dockerfile="'BucStop-WebApp'/Bucstop/Dockerfile"
+              path="BucStop_WebApp/Bucstop"
+              dockerfile="'BucStop_WebApp'/Bucstop/Dockerfile"
               ;;
             gateway)
               path="Team-3-BucStop_APIGateway/APIGateway"
@@ -160,17 +160,44 @@ jobs:
           cache-to: type=inline
 
   ensure-all-images:
-    name: Ensure all 5 images exist in GHCR (build missing ones from default branch)
+    name: Ensure all 5 images exist in GHCR (build missing ones from latest release or default branch)
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
     env:
       GHCR_REGISTRY: ghcr.io
       IMAGE_NAMESPACE: ${{ needs.set-namespace.outputs.namespace }}
     steps:
-      - name: Checkout default branch (for building missing images)
+      - name: Get latest release tag (if any)
+        id: get_release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            try {
+              const resp = await github.rest.repos.getLatestRelease({ owner, repo });
+              // return tag_name as the step output
+              return { tag: resp.data.tag_name || '' };
+            } catch (err) {
+              // no releases or API returned 404 -> return empty string
+              return { tag: '' };
+            }
+
+      - name: Decide ref to checkout (latest release tag or default branch)
+        id: choose_ref
+        run: |
+          if [ -n "${{ steps.get_release.outputs.tag }}" ]; then
+            echo "Using release tag: ${{ steps.get_release.outputs.tag }}"
+            echo "ref=${{ steps.get_release.outputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "No release found; using default branch: ${{ github.event.repository.default_branch }}"
+            echo "ref=${{ github.event.repository.default_branch }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout chosen ref (release tag or default branch)
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ steps.choose_ref.outputs.ref }}
           fetch-depth: 0
 
       - name: Login to GHCR
@@ -183,7 +210,6 @@ jobs:
       - name: Check & build missing images
         shell: bash
         run: |
-          echo "IMAGE_NAMESPACE=${IMAGE_NAMESPACE,,}" >> $GITHUB_ENV
           set -euo pipefail
 
           # canonical list of services
@@ -192,7 +218,7 @@ jobs:
           # mapping function: return directory for a service name
           get_dir() {
             case "$1" in
-              webapp)  echo "BucStop-WebApp/Bucstop" ;;
+              webapp)  echo "BucStop_WebApp/Bucstop" ;;
               gateway) echo "Team-3-BucStop_APIGateway/APIGateway" ;;
               snake)   echo "Team-3-BucStop_Snake/Snake" ;;
               pong)    echo "Team-3-BucStop_Pong/Pong" ;;
@@ -218,7 +244,7 @@ jobs:
             exit 0
           fi
 
-          echo "Will build missing images from default branch: ${missing[*]}"
+          echo "Will build missing images from checked-out ref (${GITHUB_SHA}): ${missing[*]}"
           for svc in "${missing[@]}"; do
             dir="$(get_dir "$svc")"
             dockerfile="${dir}/Dockerfile"
@@ -227,11 +253,11 @@ jobs:
               continue
             fi
             tag_latest="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:latest"
-            tag_branch="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:${{ github.event.repository.default_branch }}"
-            echo "Building $svc from $dir -> $tag_latest, $tag_branch"
-            docker build -t "${tag_latest}" -t "${tag_branch}" -f "${dockerfile}" "${dir}"
+            tag_ref="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:${{ steps.choose_ref.outputs.ref }}"
+            echo "Building $svc from $dir -> $tag_latest, $tag_ref"
+            docker build -t "${tag_latest}" -t "${tag_ref}" -f "${dockerfile}" "${dir}"
             docker push "${tag_latest}"
-            docker push "${tag_branch}"
+            docker push "${tag_ref}"
           done
 
       - name: Done

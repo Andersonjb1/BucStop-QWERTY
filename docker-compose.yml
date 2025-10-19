@@ -2,7 +2,7 @@
 services:
   bucstop:
     build:
-      context: ./BucStop-WebApp/BucStop
+      context: ./BucStop_WebApp/BucStop
       dockerfile: Dockerfile
     container_name: bucstop
     ports:
