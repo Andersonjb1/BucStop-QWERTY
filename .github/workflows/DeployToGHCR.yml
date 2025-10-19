@@ -147,7 +147,7 @@ jobs:
 
   ensure-all-images:
     name: Ensure all 5 images exist in GHCR (build missing ones from default branch)
-    needs: [build-changed, detect-changes]
+    needs: detect-changes
     runs-on: ubuntu-latest
     env:
       GHCR_REGISTRY: ghcr.io
