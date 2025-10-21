@@ -1,4 +1,4 @@
-name: Automated Navigation Test
+name: Automated Selenium Testing
 
 on:
   pull_request:
@@ -60,9 +60,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install selenium webdriver-manager
 
-    - name: Run Selenium Test
+    - name: Run Navigation Selenium Test
       run: |
-        python ./.automatedTests/v1_0_0_NavigationTest.py
+        python ./.automatedTests/v1_0_1_NavigationTest.py
+
+    - name: Run Play Base Games Selenium Test
+      run: |
+        python ./.automatedTests/v1_0_0_PlayBaseGameTest.py
 
     - name: Shutdown Containers
       if: always()
