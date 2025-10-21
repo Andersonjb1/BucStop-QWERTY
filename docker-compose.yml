@@ -1,9 +1,7 @@
 # VERSION 1.0.0 #
 services:
   bucstop:
-    build:
-      context: ./BucStop_WebApp/BucStop
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/webapp:latest
     container_name: bucstop
     ports:
       - "8080:80"
@@ -12,16 +10,12 @@ services:
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
       - GIT_COMMIT_HASH=${GIT_COMMIT:-unknown}
-    depends_on:
-      - api-gateway
     volumes:
       - snapshots-data:/app/Snapshots
       - logs-data:/app/Logs
 
   api-gateway:
-    build:
-      context: ./Team-3-BucStop_APIGateway/APIGateway
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/gateway:latest
     container_name: api-gateway
     ports:
       - "8081:80" # Expose API Gateway on localhost:8081
@@ -29,15 +23,9 @@ services:
       - bucstop-network
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
-    depends_on:
-      - snake
-      - pong
-      - tetris
 
   snake:
-    build:
-      context: ./Team-3-BucStop_Snake/Snake
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/snake:latest
     container_name: game-snake
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
@@ -47,9 +35,7 @@ services:
       - bucstop-network
 
   pong:
-    build:
-      context: ./Team-3-BucStop_Pong/Pong
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/pong:latest
     container_name: game-pong
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
@@ -59,9 +45,7 @@ services:
       - bucstop-network
 
   tetris:
-    build:
-      context: ./Team-3-BucStop_Tetris/Tetris
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/tetris:latest
     container_name: game-tetris
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
@@ -86,6 +70,36 @@ services:
       - DOTNET_ENVIRONMENT=${env:-containers}
     volumes:
       - submission-data:/app/Submissions
+
+  # Watchtower is an all in one CI/CD tool that allows us to periodically
+  # check and see if our containers can be updated. If they can, it performs a
+  # rolling update to the ones who need it.
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    ports:
+      - "8086:80"
+    networks:
+      - bucstop-network
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # The following commands:
+    # interval - the interval watchtower will check our container images
+    # cleanup - removes the older images after the update
+    # rolling-restart - updates one container at a time
+    command: >
+      --interval 30
+      --cleanup
+      --rolling-restart
+    environment:
+      - TZ=America/New_York # set your timezone (e.g. America/New_York)
+      # --- Notifications ---
+      #- WATCHTOWER_NOTIFICATIONS=shoutrrr
+      #- WATCHTOWER_NOTIFICATION_URL=generic://default962441d550554349bad3baec43c3d7.41.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/04cd909fe116414ab6ef115b60d1ca5f/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=st--w13vrbVg1RZX56GOQ7qylatGcMJDBKdTIHFnNTY?template=json
+      #- WATCHTOWER_NOTIFICATION_MSTEAMS_USE_LOGO=true   # optional, includes Watchtower logo in messages
+      # --- Notification Levels ---
+      #- WATCHTOWER_NOTIFICATIONS_LEVEL=info         # options: panic, fatal, error, warn, info, debug, trace
 
 networks:
   bucstop-network:

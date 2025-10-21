@@ -12,6 +12,8 @@
 # - pong    -> "Team-3-BucStop_Pong/Pong/"
 # - tetris  -> "Team-3-BucStop_Tetris/Tetris/"
 
+name: Deploy To GHCR
+
 on:
   push:
     branches:
