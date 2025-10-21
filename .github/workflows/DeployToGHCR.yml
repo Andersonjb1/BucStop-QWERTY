@@ -68,7 +68,7 @@ jobs:
             if (process.env.SNAKE === 'true') changed.push('snake');
             if (process.env.PONG === 'true') changed.push('pong');
             if (process.env.TETRIS === 'true') changed.push('tetris');
-            return { services: JSON.stringify(changed) };
+            return { services: JSON.stringify(changed) >> "$GITHUB_OUTPUT" };
         env:
           WEBAPP: ${{ steps.filter.outputs.webapp }}
           GATEWAY: ${{ steps.filter.outputs.gateway }}
