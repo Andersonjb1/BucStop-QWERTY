@@ -54,25 +54,17 @@ jobs:
             tetris:
               - 'Team-3-BucStop_Tetris/Tetris/**'
               - 'Team-3-BucStop_Tetris/**'
-
       - name: Produce JSON array of changed services
         id: services-json
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const changed = [];
-            if (process.env.WEBAPP === 'true') changed.push('webapp');
-            if (process.env.GATEWAY === 'true') changed.push('gateway');
-            if (process.env.SNAKE === 'true') changed.push('snake');
-            if (process.env.PONG === 'true') changed.push('pong');
-            if (process.env.TETRIS === 'true') changed.push('tetris');
-            return { services: JSON.stringify(changed) };
-        env:
-          WEBAPP: ${{ steps.filter.outputs.webapp }}
-          GATEWAY: ${{ steps.filter.outputs.gateway }}
-          SNAKE: ${{ steps.filter.outputs.snake }}
-          PONG: ${{ steps.filter.outputs.pong }}
-          TETRIS: ${{ steps.filter.outputs.tetris }}
+        run: |
+          changed=()
+          [[ "${{ steps.filter.outputs.webapp }}" == 'true' ]] && changed+=('webapp')
+          [[ "${{ steps.filter.outputs.gateway }}" == 'true' ]] && changed+=('gateway')
+          [[ "${{ steps.filter.outputs.snake }}" == 'true' ]] && changed+=('snake')
+          [[ "${{ steps.filter.outputs.pong }}" == 'true' ]] && changed+=('pong')
+          [[ "${{ steps.filter.outputs.tetris }}" == 'true' ]] && changed+=('tetris')
+
+          echo "services=$(jq -nc --argjson arr "$(printf '%s\n' "${changed[@]}" | jq -R . | jq -s .)" '$arr')" >> "$GITHUB_OUTPUT"
 
   set-namespace:
     name: Set Namespace
@@ -248,13 +240,6 @@ jobs:
           for svc in "${missing[@]}"; do
             dir="$(get_dir "$svc")"
             dockerfile="${dir}/Dockerfile"
-            #######################
-            echo "Forcing Action to Build BucStop WebApp"
-            echo "Delete When Done"
-            docker build -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest" -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}" -f "Bucstop WebApp/BucStop/Dockerfile" "Bucstop WebApp/BucStop"
-            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest"
-            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}"
-            #######################
             if [ ! -f "$dockerfile" ]; then
               echo "Warning: Dockerfile not found for $svc at $dockerfile — skipping"
               continue
