@@ -13,19 +13,6 @@ namespace BucStop.Controllers
 
         private readonly ILogger<AccountController> _logger;
 
-        // Following method is to solve a security issue, but CIDR blocks should work so we shouldn't even need emails in the next sprint or 2
-        // Helper method to mask email addresses for logs
-        /*private string MaskEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return "";
-            var atIdx = email.IndexOf('@');
-            if (atIdx <= 1)
-                return "***" + email.Substring(atIdx);
-            // show first letter, mask rest before @
-            return email.Substring(0, 1) + "***" + email.Substring(atIdx);
-        } */
-
         public AccountController(ILogger<AccountController> logger)
         {
             _logger = logger;
@@ -54,14 +41,10 @@ namespace BucStop.Controllers
 
                 return View();
             }
-
-            //string maskedEmail = MaskEmail(email);
             
             //ToLower added to remove case sensitivity. Current Font makes all lettering look like capital letters.
             if (Regex.IsMatch(email.ToLower(), @"\b[A-Za-z0-9._%+-]+@etsu\.edu\b"))
-            {
-                //string localMaskedEmail = MaskEmail(email);
-                
+            {                
                 // If authentication is successful, create a ClaimsPrincipal and sign in the user
                 var claims = new[]
                 {
