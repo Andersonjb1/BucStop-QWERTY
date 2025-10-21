@@ -12,8 +12,6 @@
 # - pong    -> "Team-3-BucStop_Pong/Pong/"
 # - tetris  -> "Team-3-BucStop_Tetris/Tetris/"
 
-name: Deploy To GHCR
-
 on:
   push:
     branches:
@@ -56,6 +54,7 @@ jobs:
             tetris:
               - 'Team-3-BucStop_Tetris/Tetris/**'
               - 'Team-3-BucStop_Tetris/**'
+
       - name: Produce JSON array of changed services
         id: services-json
         run: |
@@ -245,6 +244,13 @@ jobs:
           for svc in "${missing[@]}"; do
             dir="$(get_dir "$svc")"
             dockerfile="${dir}/Dockerfile"
+            #######################
+            echo "Forcing Action to Build BucStop WebApp"
+            echo "Delete When Done"
+            docker build -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest" -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}" -f "Bucstop WebApp/BucStop/Dockerfile" "Bucstop WebApp/BucStop"
+            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest"
+            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}"
+            #######################
             if [ ! -f "$dockerfile" ]; then
               echo "Warning: Dockerfile not found for $svc at $dockerfile — skipping"
               continue
