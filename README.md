@@ -1,6 +1,6 @@
 # BucStop
 
-![BucStop Logo](/Bucstop_WebApp/BucStop/wwwroot/Logo.png)
+![BucStop Logo](/Bucstop%20WebApp/BucStop/wwwroot/Logo.png)
 
 ## Overview
 
