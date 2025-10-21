@@ -48,7 +48,7 @@ namespace BucStop.Controllers
                 // If authentication is successful, create a ClaimsPrincipal and sign in the user
                 var claims = new[]
                 {
-                    new Claim(ClaimTypes.Name, "hardcoded"),
+                    new Claim(ClaimTypes.Name, email),
                     new Claim(ClaimTypes.NameIdentifier, "user_id"),
                 };
 
@@ -60,7 +60,7 @@ namespace BucStop.Controllers
 
                 stopwatch.Stop();
 
-                _logger.LogInformation("{Category}: {Email} successfully logged in.", "UserActivity", email);
+                _logger.LogInformation("{Category}: {User} successfully logged in.", "UserActivity", email);
                 _logger.LogInformation("{Category}: Successful Login Page Loaded in {LoadTime}ms.", "PageLoadTimes", stopwatch.ElapsedMilliseconds);
 
                 return RedirectToAction("Index", "Home");
