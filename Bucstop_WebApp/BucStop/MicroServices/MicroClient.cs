@@ -7,7 +7,6 @@ using System.Text;
 using BucStop.Models;
 using BucStop.Controllers;
 
-// TESTING DEPLOY ACTION
 
 namespace BucStop
 {
@@ -140,7 +139,7 @@ namespace BucStop
             catch (Exception ex) //Log error and return false if any exception occurs
             {
                 _logger.LogError(ex.Message);
-                return false;
+                return false; 
             }
         }
     }

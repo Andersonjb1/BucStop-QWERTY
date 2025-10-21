@@ -9,8 +9,6 @@ using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using static System.Net.WebRequestMethods;
 
-// TESTING DEPLOY ACTION
-
 namespace Tetris
 {
     [ApiController]
