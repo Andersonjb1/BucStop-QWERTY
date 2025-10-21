@@ -15,7 +15,7 @@ namespace BucStop.Controllers
 
         // Following method is to solve a security issue, but CIDR blocks should work so we shouldn't even need emails in the next sprint or 2
         // Helper method to mask email addresses for logs
-        private string MaskEmail(string email)
+        /*private string MaskEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
                 return "";
@@ -24,7 +24,7 @@ namespace BucStop.Controllers
                 return "***" + email.Substring(atIdx);
             // show first letter, mask rest before @
             return email.Substring(0, 1) + "***" + email.Substring(atIdx);
-        }
+        } */
 
         public AccountController(ILogger<AccountController> logger)
         {
@@ -55,15 +55,17 @@ namespace BucStop.Controllers
                 return View();
             }
 
-            string maskedEmail = MaskEmail(email);
+            //string maskedEmail = MaskEmail(email);
+            
             //ToLower added to remove case sensitivity. Current Font makes all lettering look like capital letters.
             if (Regex.IsMatch(email.ToLower(), @"\b[A-Za-z0-9._%+-]+@etsu\.edu\b"))
             {
-                string localMaskedEmail = MaskEmail(email);
+                //string localMaskedEmail = MaskEmail(email);
+                
                 // If authentication is successful, create a ClaimsPrincipal and sign in the user
                 var claims = new[]
                 {
-                    new Claim(ClaimTypes.Name, localMaskedEmail),
+                    new Claim(ClaimTypes.Name, "hardcoded"),
                     new Claim(ClaimTypes.NameIdentifier, "user_id"),
                 };
 
@@ -75,7 +77,7 @@ namespace BucStop.Controllers
 
                 stopwatch.Stop();
 
-                _logger.LogInformation("{Category}: {MaskedEmail} successfully logged in.", "UserActivity", localMaskedEmail);
+                _logger.LogInformation("{Category}: {Email} successfully logged in.", "UserActivity", email);
                 _logger.LogInformation("{Category}: Successful Login Page Loaded in {LoadTime}ms.", "PageLoadTimes", stopwatch.ElapsedMilliseconds);
 
                 return RedirectToAction("Index", "Home");
@@ -83,7 +85,7 @@ namespace BucStop.Controllers
             else
             {
                 // Authentication failed, return to the login page with an error message
-                _logger.LogWarning("{Category}: Invalid login attempt for {Email}", "InvalidLogin", maskedEmail);
+                _logger.LogWarning("{Category}: Invalid login attempt for {Email}", "InvalidLogin", email);
                 ModelState.AddModelError(string.Empty, "Only ETSU students can play, sorry :(");
 
                 stopwatch.Stop();
