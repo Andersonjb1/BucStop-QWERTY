@@ -37,6 +37,10 @@ namespace BucStop.Services
 
         public async Task<Snapshot> GetSnapshotAsync(string id)
         {
+            // Validate 'id' to prevent path traversal attacks
+            if (string.IsNullOrEmpty(id) || id.Contains("..") || id.Contains("/") || id.Contains("\\"))
+                return null;
+
             var filePath = Path.Combine(_snapshotsDirectory, $"{id}.json");
             if (!File.Exists(filePath))
                 return null;
