@@ -17,6 +17,7 @@ services:
     volumes:
       - snapshots-data:/app/Snapshots
       - logs-data:/app/Logs
+      - ./SharedSuggestions:/app/SharedSuggestions   # persistent local folder for game suggestions
 
   api-gateway:
     build:

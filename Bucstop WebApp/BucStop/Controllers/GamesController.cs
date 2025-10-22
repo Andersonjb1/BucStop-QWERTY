@@ -32,7 +32,7 @@ namespace BucStop.Controllers
         public async Task<IActionResult> IndexAsync()
         {
             _logger.LogInformation("Games index page accessed.");
-           
+
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -107,5 +107,54 @@ namespace BucStop.Controllers
         {
             return View();
         }
+
+        // Starting point for input validation for game suggestion file uploads. 
+        // Only .txt files under 2 MB are accepted.
+        // Files sent to the "SharedSuggestions" folder with a timestamped filename.
+        // Returns user to home page.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitSuggestion(IFormFile file, string username)
+        {
+            // Ensure a file was provided
+            if (file == null || file.Length == 0)
+            {
+                TempData["Message"] = "Please select a valid .txt file before submitting.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // ✅ 1️⃣ File type check — only allow .txt
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (fileExtension != ".txt")
+            {
+                TempData["Message"] = "Only .txt files are allowed.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // ✅ 2️⃣ File size check — max 2 MB (2 * 1024 * 1024 bytes)
+            const long maxFileSize = 2 * 1024 * 1024;
+            if (file.Length > maxFileSize)
+            {
+                TempData["Message"] = "File size must be less than 2 MB.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // ✅ 3️⃣ Save to SharedSuggestions folder
+            var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "SharedSuggestions");
+            if (!Directory.Exists(uploadPath))
+                Directory.CreateDirectory(uploadPath);
+
+            var safeFileName = Path.GetFileNameWithoutExtension(file.FileName);
+            var finalName = $"{(string.IsNullOrWhiteSpace(username) ? "Anonymous" : username)}_{safeFileName}_{DateTime.Now:yyyyMMddHHmmss}.txt";
+            var filePath = Path.Combine(uploadPath, finalName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+                await file.CopyToAsync(stream);
+
+            TempData["Message"] = "✅ Thank you! Your game suggestion has been received.";
+            return RedirectToAction("Index", "Home");
+        }
+
     }
+    
 }
