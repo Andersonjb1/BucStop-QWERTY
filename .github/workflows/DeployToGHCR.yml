@@ -12,6 +12,8 @@
 # - pong    -> "Team-3-BucStop_Pong/Pong/"
 # - tetris  -> "Team-3-BucStop_Tetris/Tetris/"
 
+name: DeployToGHCR
+
 on:
   push:
     branches:
@@ -88,7 +90,7 @@ jobs:
     name: Build & push changed microservice images
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
-    #if: ${{ fromJson(needs.detect-changes.outputs.services || '[]').length >= 1 }}
+    if: ${{ needs.detect-changes.outputs.services }}
     strategy:
       fail-fast: false
       matrix:
@@ -149,7 +151,6 @@ jobs:
           file: ${{ steps.set-path.outputs.dockerfile }}
           push: true
           tags: |
-            ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:pr-${{ github.event.number }}
             ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:${{ github.head_ref || github.ref_name }}
             ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:latest
           cache-from: type=registry,ref=${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:cache
