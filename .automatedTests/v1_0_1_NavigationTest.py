@@ -8,10 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 import time
 
-# pip install webdriver_manager
-# pip install selenium
-# python ./.automatedTests/v1_0_0_NavigationTest.py
-
+# Chrome Options
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--window-size=1920,1080")
@@ -37,6 +34,8 @@ try:
     print(f"Current Page: {page_title}")
     assert page_title == "Home Page - BucStop", f"Expected title to be 'Home Page - BucStop', but got {page_title}"
 
+    
+    
     # 2) Navigates to the login page after clicking the games page.
     print("2) Navigating to Login Page...")
 
@@ -50,6 +49,8 @@ try:
     print(f"Headers: {headers}")
     assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Login' on this page"
 
+    
+    
     # 3) Logs into the product.
     print("3) Logging into the Product....")
     email_input = WebDriverWait(driver, 10).until(
@@ -67,6 +68,9 @@ try:
     headers = driver.find_elements(By.XPATH, "//h1[text()='top games']")
     print(f"Headers: {headers}")
     assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'top games' on this page"
+    
+    
+    
     # 4) Navigates to the games page.
     print("4) Navigating to Games....")
 
@@ -80,6 +84,8 @@ try:
     print(f"Headers: {headers}")
     assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'List of Games' on this page"
 
+    
+    
     # 5) Navigates to the snake.
     print("5) Navigating to snake....")
     link = WebDriverWait(driver, 10).until(
@@ -91,9 +97,12 @@ try:
     element = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='card-header' and text()='Snake']"))
     )
+    
     print(f"Game Title: {element.text.strip()}")
     assert element.text.strip() == "Snake", f"Expected game title to be 'Snake', but got {element.text.strip()}"
 
+    
+    
     # 6) Navigates to the tetris.
     print("6) Navigating to tetris....")
 
@@ -111,9 +120,12 @@ try:
     element = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='card-header' and text()='Tetris']"))
     )
+    
     print(f"Game Title: {element.text.strip()}")
     assert element.text.strip() == "Tetris", f"Expected game title to be 'Tetris', but got {element.text.strip()}"
 
+    
+    
     # 7) Navigates to the pong.
     print("7) Navigating to pong....")
 
@@ -131,9 +143,12 @@ try:
     element = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.XPATH, "//div[@class='card-header' and text()='Pong']"))
     )
+    
     print(f"Game Title: {element.text.strip()}")
     assert element.text.strip() == "Pong", f"Expected game title to be 'Pong', but got {element.text.strip()}"
 
+    
+    
     # 8) Navigates to snapshots.
     print("8) Navigating to Snapshots....")
 
@@ -147,6 +162,8 @@ try:
     print(f"Headers: {headers}")
     assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'System Snapshots' on this page"
 
+    
+    
     # 9) Navigates to create a snapshots.
     print("9) Navigating to Create New Snapshot....")
 
@@ -160,6 +177,8 @@ try:
     print(f"Headers: {headers}")
     assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Create New Snapshot' on this page"
 
+    
+    
     # 10) Navigates to about.
     print("10) Navigating to About....")
 
@@ -168,6 +187,8 @@ try:
     )
     games_link.click()
 
+    
+    
     # 11) Navigates to admin.
     print("11) Navigating to Admin....")
 
@@ -181,6 +202,8 @@ try:
     print(f"Headers: {headers}")
     assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Welcome' on this page"
 
+    
+    
     # 12) Navigates to admin.
     print("12) Navigating to Add Your Game....")
 
@@ -194,6 +217,8 @@ try:
     print(f"Headers: {headers}")
     assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Game Submission & Creator Guide' on this page"
 
+    
+    
     # 13) Logout
     print("13) Logging out of Product...")
 
@@ -206,6 +231,7 @@ try:
     headers = driver.find_elements(By.XPATH, "//h1[text()='Login']")
     print(f"Headers: {headers}")
     assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Login' on this page"
+
 
 finally:
     print("Test Complete")
