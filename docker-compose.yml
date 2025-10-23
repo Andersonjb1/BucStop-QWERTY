@@ -1,10 +1,9 @@
-# VERSION 1.0.0 #
+# VERSION 1.2.0 #
 services:
   bucstop:
-    build:
-      context: ./BucStop_WebApp/BucStop
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/webapp:latest
     container_name: bucstop
+    restart: unless-stopped
     ports:
       - "8080:80"
     networks:
@@ -19,10 +18,9 @@ services:
       - logs-data:/app/Logs
 
   api-gateway:
-    build:
-      context: ./Team-3-BucStop_APIGateway/APIGateway
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/gateway:latest
     container_name: api-gateway
+    restart: unless-stopped
     ports:
       - "8081:80" # Expose API Gateway on localhost:8081
     networks:
@@ -35,10 +33,9 @@ services:
       - tetris
 
   snake:
-    build:
-      context: ./Team-3-BucStop_Snake/Snake
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/snake:latest
     container_name: game-snake
+    restart: unless-stopped
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
     ports:
@@ -47,10 +44,9 @@ services:
       - bucstop-network
 
   pong:
-    build:
-      context: ./Team-3-BucStop_Pong/Pong
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/pong:latest
     container_name: game-pong
+    restart: unless-stopped
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
     ports:
@@ -59,10 +55,9 @@ services:
       - bucstop-network
 
   tetris:
-    build:
-      context: ./Team-3-BucStop_Tetris/Tetris
-      dockerfile: Dockerfile
+    image: ghcr.io/andersonjb1/bucstop-qwerty/tetris:latest
     container_name: game-tetris
+    restart: unless-stopped
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
     ports:
@@ -78,6 +73,7 @@ services:
     # Using a placeholder "hello world" image since there isn't code to build yet.
     image: "hello-world" # This line should be deleted once Submission Gateway is implemented.
     container_name: submission-gateway
+    #restart: unless-stopped
     ports:
       - "8085:80"
     networks:
