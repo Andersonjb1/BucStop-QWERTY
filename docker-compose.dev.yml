@@ -1,4 +1,3 @@
-
 # To run this and test your changes locally run the following command:
 #
 #  sudo env=containersLocal docker compose -f docker-compose.dev.yml build --no-cache
@@ -15,10 +14,8 @@ services:
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
       - GIT_COMMIT_HASH=${GIT_COMMIT:-unknown}
-    depends_on:
-      - api-gateway
     volumes:
       - snapshots-data:/app/Snapshots
       - logs-data:/app/Logs
@@ -33,11 +30,7 @@ services:
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
-    depends_on:
-      - snake
-      - pong
-      - tetris
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
 
   snake:
     build:
@@ -45,7 +38,7 @@ services:
       dockerfile: Dockerfile
     container_name: game-snake
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
     ports:
       - "8082:80" # Expose Snake microservice on localhost:8082
     networks:
@@ -57,7 +50,7 @@ services:
       dockerfile: Dockerfile
     container_name: game-pong
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
     ports:
       - "8083:80" # Expose Pong microservice on localhost:8083
     networks:
@@ -69,7 +62,7 @@ services:
       dockerfile: Dockerfile
     container_name: game-tetris
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
     ports:
       - "8084:80" # Expose Tetris microservice on localhost:8084
     networks:
@@ -88,7 +81,7 @@ services:
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
     volumes:
       - submission-data:/app/Submissions
 
