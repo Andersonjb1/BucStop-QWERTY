@@ -1,4 +1,4 @@
-﻿﻿using BucStop.Models;
+﻿using BucStop.Models;
 using BucStop.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -107,5 +107,50 @@ namespace BucStop.Controllers
         {
             return View();
         }
+
+        // Starting point for input validation for game suggestion file uploads. 
+        // Only .txt files under 2 MB are accepted.
+        // Files sent to the "SharedSuggestions" folder with a timestamped filename.
+        // Returns user to home page.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitSuggestion(IFormFile file, string username)
+        {
+            // Ensure a file was provided
+            if (file == null || file.Length == 0)
+            {
+                TempData["Message"] = "Please select a valid .txt file before submitting.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // ✅ File type check — only allow .txt
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (fileExtension != ".txt")
+            {
+                TempData["Message"] = "Only .txt files are allowed.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // File size check — max 2 MB (2 * 1024 * 1024 bytes)
+            const long maxFileSize = 2 * 1024 * 1024;
+            if (file.Length > maxFileSize)
+            {
+                TempData["Message"] = "File size must be less than 2 MB.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // “Send to the void” — don’t store anything for now
+            using (var stream = new MemoryStream())
+            {
+                await file.CopyToAsync(stream);
+                // Do nothing with the stream — discard it
+            }
+
+            TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
+            return RedirectToAction("Index", "Home");
+        }
+
+
     }
+
 }
