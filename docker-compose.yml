@@ -1,5 +1,3 @@
-# VERSION 1.2.0 #
-
 # Each service uses images we've built and pushed to our repo's GHCR
 # The script that controls those images is found here - .gitub/workflows/DeployToGHCR.yml
 
