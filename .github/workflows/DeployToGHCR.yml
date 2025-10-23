@@ -1,4 +1,4 @@
-# Build changed microservice images on PRs to Sprint-* and ensure all 5 images exist in GHCR
+# Build changed microservice images on push to Sprint-* and ensure all 5 images exist in GHCR
 #
 # - Triggers on push to branches matching Sprint-*
 # - Detects which of the five microservice directories changed
