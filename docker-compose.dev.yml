@@ -1,0 +1,119 @@
+# To run this and test your changes locally run the following command:
+#
+#  sudo env=containersLocal docker compose -f docker-compose.dev.yml build --no-cache
+#
+
+services:
+  bucstop:
+    build:
+      context: ./Bucstop_WebApp/BucStop
+      dockerfile: Dockerfile
+    container_name: bucstop
+    ports:
+      - "8080:80"
+    networks:
+      - bucstop-network
+    environment:
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+      - GIT_COMMIT_HASH=${GIT_COMMIT:-unknown}
+    volumes:
+      - snapshots-data:/app/Snapshots
+      - logs-data:/app/Logs
+
+  api-gateway:
+    build:
+      context: ./Team-3-BucStop_APIGateway/APIGateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8081:80" # Expose API Gateway on localhost:8081
+    networks:
+      - bucstop-network
+    environment:
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+
+  snake:
+    build:
+      context: ./Team-3-BucStop_Snake/Snake
+      dockerfile: Dockerfile
+    container_name: game-snake
+    environment:
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+    ports:
+      - "8082:80" # Expose Snake microservice on localhost:8082
+    networks:
+      - bucstop-network
+
+  pong:
+    build:
+      context: ./Team-3-BucStop_Pong/Pong
+      dockerfile: Dockerfile
+    container_name: game-pong
+    environment:
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+    ports:
+      - "8083:80" # Expose Pong microservice on localhost:8083
+    networks:
+      - bucstop-network
+
+  tetris:
+    build:
+      context: ./Team-3-BucStop_Tetris/Tetris
+      dockerfile: Dockerfile
+    container_name: game-tetris
+    environment:
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+    ports:
+      - "8084:80" # Expose Tetris microservice on localhost:8084
+    networks:
+      - bucstop-network
+
+  submission-gateway:
+    # Uncomment the following next 3 lines once the code for the Submission Gateway is added.
+    #build:
+    #context: ./BucStop_SubmissionGateway/SubmissionGateway
+    #dockerfile: Dockerfile
+    # Using a placeholder "hello world" image since there isn't code to build yet.
+    image: "hello-world" # This line should be deleted once Submission Gateway is implemented.
+    container_name: submission-gateway
+    ports:
+      - "8085:80"
+    networks:
+      - bucstop-network
+    environment:
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+    volumes:
+      - submission-data:/app/Submissions
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    ports:
+      - "9000:80"
+    networks:
+      - bucstop-network
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # The following commands:
+    # interval - the interval watchtower will check our container images
+    # cleanup - removes the older images after the update
+    # rolling-restart - updates one container at a time
+    command: >
+      --interval 30
+      --cleanup
+      --rolling-restart
+    environment:
+      - TZ=America/New_York # set your timezone (e.g. America/New_York)
+
+networks:
+  bucstop-network:
+    driver: bridge
+
+volumes:
+  snapshots-data:
+    driver: local
+  logs-data:
+    driver: local
+  submission-data:
+    driver: local

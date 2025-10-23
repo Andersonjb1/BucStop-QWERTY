@@ -47,9 +47,9 @@ The application is built using a microservices architecture with the following c
    cd BucStop-QWERTY
    ```
 
-2. Start all services using Docker Compose:
+2. Start all services locally using Docker Compose specifying the .dev version:
    ```
-   env=containersLocal docker compose up -d
+   sudo env=containersLocal docker compose -f docker-compose.dev.yml build --no-cache
    ```
 
 3. Access the application:
