@@ -1,8 +1,8 @@
 # Build changed microservice images on PRs to Sprint-* and ensure all 5 images exist in GHCR
 #
-# - Triggers on pull_request to branches matching Sprint-*
+# - Triggers on push to branches matching Sprint-*
 # - Detects which of the five microservice directories changed
-# - Builds & pushes images for changed services to GHCR
+# - Builds & pushes images for changed services to GitHub Container Registry (GHCR)
 # - Ensures at the end that all 5 service images exist in GHCR (builds any missing ones from the default branch)
 #
 # Services:
@@ -22,6 +22,21 @@ on:
 permissions:
   contents: read
   packages: write
+
+# There are 4 total jobs:
+# detect-changes - filters the folders of each service,
+#                  if anything changed in one of those folders
+#                  it sets its output to a list of the changed folders.
+#
+# set-namespace - pretty simple, it just sets the path to our repo to all lowercase
+#                 there was issues if the path had uppercase letters
+#
+# build-changed - takes the list of changed services from detect-changes, builds the new version, and pushes it to GHCR
+#                 if there weren't any changes, this is skipped
+#
+# ensure-all-images - check GHCR for images of each service,
+#                     if one is missing, it builds and pushes it to GHCR
+#
 
 jobs:
   detect-changes:
@@ -90,6 +105,11 @@ jobs:
     name: Build & push changed microservice images
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
+    ##################################################
+
+    # if anything ever breaks, check this if statement first
+
+    ##################################################
     if: ${{ needs.detect-changes.outputs.services }}
     strategy:
       fail-fast: false
@@ -245,13 +265,6 @@ jobs:
           for svc in "${missing[@]}"; do
             dir="$(get_dir "$svc")"
             dockerfile="${dir}/Dockerfile"
-            #######################
-            echo "Forcing Action to Build BucStop WebApp"
-            echo "Delete When Done"
-            docker build -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest" -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}" -f "Bucstop WebApp/BucStop/Dockerfile" "Bucstop WebApp/BucStop"
-            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest"
-            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}"
-            #######################
             if [ ! -f "$dockerfile" ]; then
               echo "Warning: Dockerfile not found for $svc at $dockerfile — skipping"
               continue

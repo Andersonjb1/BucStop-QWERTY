@@ -17,7 +17,7 @@ This document outlines the implementation of a Continuous Integration and Contin
   - Require pull request reviews before merging
   - Require status checks to pass before merging
 
-### 2. CI Pipeline with GitHub Actions or Jenkins
+### 2. CI Pipeline with GitHub Actions
 
 #### GitHub Actions Implementation
 
@@ -57,100 +57,320 @@ jobs:
     - name: Build application
       run: npm run build
 ```
-> Above, we can see the workflow is being excuted (via GitHub Actions) on an Ubuntu runner server. It checks out the code out, sets up a Node.js environment, and install dependencies. After completing those tasks, its rolls straight into linting (to check code quality), test execution, and application building.
-#### Alternative: Jenkins Setup
+> Above, we can see the workflow is being excuted (via GitHub Actions) on an Ubuntu runner server. It checks the code out, sets up a Node.js environment, and install dependencies. After completing those tasks, its rolls straight into linting (to check code quality), test execution, and application building.
 
-- Deploy Jenkins as a containerized service (seperately from BucStop) on your AWS EC2
-  - *Best practice would be to deploy this on an entirely seperate EC2 for better isolation/performance/scaling etc.* 
-- Configure webhooks from your GitHub/GitLab repository
-- Create a Jenkinsfile at the root of your project
 
 ### 3. Deployment to EC2
 
 Extend the CI workflow to include deployment steps:
+>See deployment workflow -> `.github/worflows/DeployToGHCR.yml`
 
-```yaml
-  deploy-to-ec2:
-    needs: build-and-test
+```yml
+# Build changed microservice images on PRs to Sprint-* and ensure all 5 images exist in GHCR
+#
+# - Triggers on push to branches matching Sprint-*
+# - Detects which of the five microservice directories changed
+# - Builds & pushes images for changed services to GitHub Container Registry (GHCR)
+# - Ensures at the end that all 5 service images exist in GHCR (builds any missing ones from the default branch)
+#
+# Services:
+# - webapp  -> "BucStop_WebApp/BucStop/"
+# - gateway -> "Team-3-BucStop_APIGateway/APIGateway/"
+# - snake   -> "Team-3-BucStop_Snake/Snake/"
+# - pong    -> "Team-3-BucStop_Pong/Pong/"
+# - tetris  -> "Team-3-BucStop_Tetris/Tetris/"
+
+name: DeployToGHCR
+
+on:
+  push:
+    branches:
+      - "Sprint-*"
+
+permissions:
+  contents: read
+  packages: write
+
+# There are 4 total jobs:
+# detect-changes - filters the folders of each service,
+#                  if anything changed in one of those folders
+#                  it sets its output to a list of the changed folders.
+#
+# set-namespace - pretty simple, it just sets the path to our repo to all lowercase
+#                 there was issues if the path had uppercase letters
+#
+# build-changed - takes the list of changed services from detect-changes, builds the new version, and pushes it to GHCR
+#                 if there weren't any changes, this is skipped
+#
+# ensure-all-images - check GHCR for images of each service,
+#                     if one is missing, it builds and pushes it to GHCR
+#
+
+jobs:
+  detect-changes:
+    name: Detect changed microservices
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
+    outputs:
+      services: ${{ steps.services-json.outputs.services }}
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-    
-    - name: Build and package application
-      run: |
-        npm ci
-        npm run build
-        tar -czf build.tar.gz build
-    
-    - name: Upload build artifact to S3
-      run: |
-        aws s3 cp build.tar.gz s3://bucstop-deployments/build-${{ github.sha }}.tar.gz
-    
-    - name: Deploy to EC2 instances
-      run: |
-        aws ssm send-command \
-          --document-name "AWS-RunShellScript" \
-          --targets "Key=tag:Application,Values=BucStop" \
-          --parameters commands="cd /var/www/bucstop && aws s3 cp s3://bucstop-deployments/build-${{ github.sha }}.tar.gz . && tar -xzf build-${{ github.sha }}.tar.gz && pm2 restart bucstop"
+      - name: Checkout PR branch (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            webapp:
+              - 'BucStop_WebApp/BucStop/**'
+              - 'BucStop_WebApp/**'
+              - 'BucStop/**'
+            gateway:
+              - 'Team-3-BucStop_APIGateway/APIGateway/**'
+              - 'Team-3-BucStop_APIGateway/**'
+            snake:
+              - 'Team-3-BucStop_Snake/Snake/**'
+              - 'Team-3-BucStop_Snake/**'
+            pong:
+              - 'Team-3-BucStop_Pong/Pong/**'
+              - 'Team-3-BucStop_Pong/**'
+            tetris:
+              - 'Team-3-BucStop_Tetris/Tetris/**'
+              - 'Team-3-BucStop_Tetris/**'
+
+      - name: Produce JSON array of changed services
+        id: services-json
+        run: |
+          changed=()
+          [[ "${{ steps.filter.outputs.webapp }}" == 'true' ]] && changed+=('webapp')
+          [[ "${{ steps.filter.outputs.gateway }}" == 'true' ]] && changed+=('gateway')
+          [[ "${{ steps.filter.outputs.snake }}" == 'true' ]] && changed+=('snake')
+          [[ "${{ steps.filter.outputs.pong }}" == 'true' ]] && changed+=('pong')
+          [[ "${{ steps.filter.outputs.tetris }}" == 'true' ]] && changed+=('tetris') 
+
+          echo "services=$(jq -nc --argjson arr "$(printf '%s\n' "${changed[@]}" | jq -R . | jq -s .)" '$arr')" >> "$GITHUB_OUTPUT"
+
+          echo $services
+          echo ${changed[@]}
+
+  set-namespace:
+    name: Set Namespace
+    runs-on: ubuntu-latest
+    outputs:
+      namespace: ${{ steps.set.outputs.namespace }}
+    steps:
+      - name: To Lowercase
+        id: set
+        env:
+          INPUT: ${{ github.repository }}
+        run: |
+          ns="${INPUT,,}"
+          echo "namespace=${ns}" >> "$GITHUB_OUTPUT"
+
+  build-changed:
+    name: Build & push changed microservice images
+    needs: [set-namespace, detect-changes]
+    runs-on: ubuntu-latest
+    if: ${{ needs.detect-changes.outputs.services }}
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    env:
+      GHCR_REGISTRY: ghcr.io
+      IMAGE_NAMESPACE: ${{ needs.set-namespace.outputs.namespace }}
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve service paths
+        id: set-path
+        run: |
+          svc=${{ matrix.service }}
+          case "$svc" in
+            webapp)
+              path="BucStop_WebApp/BucStop"
+              dockerfile="BucStop_WebApp/BucStop/Dockerfile"
+              ;;
+            gateway)
+              path="Team-3-BucStop_APIGateway/APIGateway"
+              dockerfile="Team-3-BucStop_APIGateway/APIGateway/Dockerfile"
+              ;;
+            snake)
+              path="Team-3-BucStop_Snake/Snake"
+              dockerfile="Team-3-BucStop_Snake/Snake/Dockerfile"
+              ;;
+            pong)
+              path="Team-3-BucStop_Pong/Pong"
+              dockerfile="Team-3-BucStop_Pong/Pong/Dockerfile"
+              ;;
+            tetris)
+              path="Team-3-BucStop_Tetris/Tetris"
+              dockerfile="Team-3-BucStop_Tetris/Tetris/Dockerfile"
+              ;;
+            *)
+              echo "Unknown service: $svc"
+              exit 1
+              ;;
+          esac
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+          echo "dockerfile=$dockerfile" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push image for service
+        uses: docker/build-push-action@v4
+        with:
+          context: ${{ steps.set-path.outputs.path }}
+          file: ${{ steps.set-path.outputs.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:${{ github.head_ref || github.ref_name }}
+            ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:latest
+          cache-from: type=registry,ref=${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}:cache
+          cache-to: type=inline
+
+  ensure-all-images:
+    name: Ensure all 5 images exist in GHCR (build missing ones from latest release or default branch)
+    needs: [set-namespace, detect-changes]
+    runs-on: ubuntu-latest
+    env:
+      GHCR_REGISTRY: ghcr.io
+      IMAGE_NAMESPACE: ${{ needs.set-namespace.outputs.namespace }}
+    steps:
+      - name: Get latest release tag (if any)
+        id: get_release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            try {
+              const resp = await github.rest.repos.getLatestRelease({ owner, repo });
+              // return tag_name as the step output
+              return { tag: resp.data.tag_name || '' };
+            } catch (err) {
+              // no releases or API returned 404 -> return empty string
+              return { tag: '' };
+            }
+
+      - name: Decide ref to checkout (latest release tag or default branch)
+        id: choose_ref
+        run: |
+          if [ -n "${{ steps.get_release.outputs.tag }}" ]; then
+            echo "Using release tag: ${{ steps.get_release.outputs.tag }}"
+            echo "ref=${{ steps.get_release.outputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "No release found; using default branch: ${{ github.event.repository.default_branch }}"
+            echo "ref=${{ github.event.repository.default_branch }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout chosen ref (release tag or default branch)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.choose_ref.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check & build missing images
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # canonical list of services
+          services=(webapp gateway snake pong tetris)
+
+          # mapping function: return directory for a service name
+          get_dir() {
+            case "$1" in
+              webapp)  echo "BucStop_WebApp/BucStop" ;;
+              gateway) echo "Team-3-BucStop_APIGateway/APIGateway" ;;
+              snake)   echo "Team-3-BucStop_Snake/Snake" ;;
+              pong)    echo "Team-3-BucStop_Pong/Pong" ;;
+              tetris)  echo "Team-3-BucStop_Tetris/Tetris" ;;
+              *) echo "" ;;
+            esac
+          }
+
+          missing=()
+          for svc in "${services[@]}"; do
+            image="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:latest"
+            echo "Checking ${image}..."
+            if docker pull "${image}" > /dev/null 2>&1; then
+              echo "Exists: ${image}"
+            else
+              echo "Missing: ${image}"
+              missing+=("${svc}")
+            fi
+          done
+
+          if [ ${#missing[@]} -eq 0 ]; then
+            echo "All images already present in GHCR."
+            exit 0
+          fi
+
+          echo "Will build missing images from checked-out ref (${GITHUB_SHA}): ${missing[*]}"
+          for svc in "${missing[@]}"; do
+            dir="$(get_dir "$svc")"
+            dockerfile="${dir}/Dockerfile"
+            #######################
+            echo "Forcing Action to Build BucStop WebApp"
+            echo "Delete When Done"
+            docker build -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest" -t "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}" -f "Bucstop WebApp/BucStop/Dockerfile" "Bucstop WebApp/BucStop"
+            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:latest"
+            docker push "${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/webapp:${{ steps.choose_ref.outputs.ref }}"
+            #######################
+            if [ ! -f "$dockerfile" ]; then
+              echo "Warning: Dockerfile not found for $svc at $dockerfile — skipping"
+              continue
+            fi
+            tag_latest="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:latest"
+            tag_ref="${GHCR_REGISTRY}/${IMAGE_NAMESPACE}/${svc}:${{ steps.choose_ref.outputs.ref }}"
+            echo "Building $svc from $dir -> $tag_latest, $tag_ref"
+            docker build -t "${tag_latest}" -t "${tag_ref}" -f "${dockerfile}" "${dir}"
+            docker push "${tag_latest}"
+            docker push "${tag_ref}"
+          done
+
+      - name: Done
+        run: echo "Ensure step complete."
+
 ```
->This step is extending the CI workflow for EC2 compatability. The `deploy-to-EC2` job depends on the `build-and-test` job and will only run if the tests pass. This will only be triggered when code is pushed to main (production) based on the following like in the yaml: `if: github.ref == 'refs/heads/main'`. The deployment process checks out the code AWS credentials using secrets stored in GitHub (don't forget to manual add these). Next, it builds & packages up the application into a tar.gz and uploads the package to an S3 bucket with the commit SHA in the filesname for versioning (this will also have to be setup seperately - don't forget to enable versioning). It utilizes the AWS System Manager (SSM) to remotely execute commands on EC2. The commands we can see being delegated at the end navigate to the application directory, download the package from S3, extract it, and restarts the application using PM2.
+>This workflow builds and pushes Docker images for the BucStop microservices to GitHub Container Registry (GHCR) on pushes to branches named in the format `Sprint-*`. It first detects which of the five service folders changed, formats the path name to lowercase, then runs a matrix job __(build in parallel)__ to build and push only the changed services (tagging by `branch/ref` and `:latest`, using registry cache). After that it verifies all five images exist in GHCR and, for any missing image, checks out the latest release or default branch and builds/pushes the missing images so the registry always contains a complete set. The workflow uses full checkout history, `dorny/paths-filter` to detect changes, `docker/login-action` and `docker/build-push-action` to authenticate and push, and requires package write permission (`GITHUB_TOKEN`).
 
 ### 4. EC2 Instance Setup
 
-- Launch EC2 instances using Amazon Linux 2 or Ubuntu Server
-- Configure security groups to allow appropriate inbound traffic
-- Install necessary dependencies:
-  ```bash
-  # Update system packages
-  sudo yum update -y  # For Amazon Linux
-  # OR
-  sudo apt update && sudo apt upgrade -y  # For Ubuntu
-  
-  # Install Node.js
-  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-  sudo apt-get install -y nodejs
-  
-  # Install PM2
-  sudo npm install -g pm2
-  
-  # Install AWS CLI
-  sudo apt install -y awscli
-  ```
-- If you haven't already, I would suggest running  [EC2-init.sh](../Scripts/ec2_init.sh) for other project specific dependencies that need to be installed for BucStop to run on EC2 (not all directly related to CI)
+>For AWS Setup see -> `Documentation/AWS-Setup` for a comprehensive explanation.
 
-- Create an IAM role for EC2 with permissions to access the S3 deployment bucket
-- Configure the application directory:
-  ```bash
-  sudo mkdir -p /var/www/bucstop
-  sudo chown -R ec2-user:ec2-user /var/www/bucstop  # For Amazon Linux
-  # OR
-  sudo chown -R ubuntu:ubuntu /var/www/bucstop  # For Ubuntu
-  ```
 
 ### 5. Monitoring and Alerting
 
-- Set up CloudWatch for monitoring EC2 instances
-- Configure CloudWatch Alarms for critical metrics
-- Implement application-level logging using Winston or similar
+>Once EC2 is setup and after running the compose file for the first time, watchtower will begin monitoring for new images pushed to the repo's GHCR
 
 ### 6. Rollback Strategy
 
-- Maintain versioned deployments in S3
+- Maintain versioned deployments in GHCR
 - Create a rollback script/command:
   ```bash
-  aws ssm send-command \
-    --document-name "AWS-RunShellScript" \
-    --targets "Key=tag:Application,Values=BucStop" \
-    --parameters commands="cd /var/www/bucstop && aws s3 cp s3://bucstop-deployments/build-{PREVIOUS_SHA}.tar.gz . && tar -xzf build-{PREVIOUS_SHA}.tar.gz && pm2 restart bucstop"
+  sudo docker stop <container-name>
+  sudo docker rm <container-name>
+  sudo docker run -p <container-port>:80 -d --name <container-name> <container-image-name>:<prev-image-tag>
+  sudo docker restart bucstop 
   ```
 - Alternatively, leverage the rollback the snapshot service integrated into BucStop.
 
@@ -167,6 +387,4 @@ Extend the CI workflow to include deployment steps:
 ## Future Improvements
 
 - Implement blue/green deployments
-- Add automated UI testing
-- Set up database migrations as part of the deployment process
 - Consider containerization with Docker on ECS/EKS instead of EC2 
