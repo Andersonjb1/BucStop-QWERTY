@@ -1,68 +1,68 @@
-# Each service uses images we've built and pushed to our repo's GHCR
-# The script that controls those images is found here - .gitub/workflows/DeployToGHCR.yml
+# To run this and test your changes locally run the following command:
+#
+#  sudo env=containersLocal docker compose -f docker-compose.dev.yml build --no-cache
+#
 
 services:
   bucstop:
-    image: ghcr.io/andersonjb1/bucstop-qwerty/webapp:latest
+    build:
+      context: ./Bucstop_WebApp/BucStop
+      dockerfile: Dockerfile
     container_name: bucstop
-    restart: unless-stopped
     ports:
       - "8080:80"
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
       - GIT_COMMIT_HASH=${GIT_COMMIT:-unknown}
-    #depends_on:
-    #  - api-gateway
     volumes:
       - snapshots-data:/app/Snapshots
       - logs-data:/app/Logs
-      - ./SharedSuggestions:/app/SharedSuggestions   # persistent local folder for game suggestions
 
   api-gateway:
-    image: ghcr.io/andersonjb1/bucstop-qwerty/gateway:latest
+    build:
+      context: ./Team-3-BucStop_APIGateway/APIGateway
+      dockerfile: Dockerfile
     container_name: api-gateway
-    restart: unless-stopped
     ports:
       - "8081:80" # Expose API Gateway on localhost:8081
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
-    #depends_on:
-    #  - snake
-    #  - pong
-    #  - tetris
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
 
   snake:
-    image: ghcr.io/andersonjb1/bucstop-qwerty/snake:latest
+    build:
+      context: ./Team-3-BucStop_Snake/Snake
+      dockerfile: Dockerfile
     container_name: game-snake
-    restart: unless-stopped
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
     ports:
       - "8082:80" # Expose Snake microservice on localhost:8082
     networks:
       - bucstop-network
 
   pong:
-    image: ghcr.io/andersonjb1/bucstop-qwerty/pong:latest
+    build:
+      context: ./Team-3-BucStop_Pong/Pong
+      dockerfile: Dockerfile
     container_name: game-pong
-    restart: unless-stopped
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
     ports:
       - "8083:80" # Expose Pong microservice on localhost:8083
     networks:
       - bucstop-network
 
   tetris:
-    image: ghcr.io/andersonjb1/bucstop-qwerty/tetris:latest
+    build:
+      context: ./Team-3-BucStop_Tetris/Tetris
+      dockerfile: Dockerfile
     container_name: game-tetris
-    restart: unless-stopped
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
     ports:
       - "8084:80" # Expose Tetris microservice on localhost:8084
     networks:
@@ -76,19 +76,15 @@ services:
     # Using a placeholder "hello world" image since there isn't code to build yet.
     image: "hello-world" # This line should be deleted once Submission Gateway is implemented.
     container_name: submission-gateway
-    #restart: unless-stopped
     ports:
       - "8085:80"
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containers}
+      - DOTNET_ENVIRONMENT=${env:-containersLocal}
     volumes:
       - submission-data:/app/Submissions
 
-  # Watchtower is an all in one CI/CD tool that allows us to periodically
-  # check and see if our containers can be updated. If they can, it performs a
-  # rolling update to the ones who need it.
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
