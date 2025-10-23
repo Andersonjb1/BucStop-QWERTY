@@ -16,6 +16,7 @@ The application is built using a microservices architecture with the following c
 
 - **WebApp**: Main frontend service that handles user authentication, game selection, and user interface
 - **API Gateway**: Orchestrates communication between the WebApp and game microservices
+- **Submission Gateway**: In a future release, it will allow users to submit their own games.
 - **Game Microservices**: Independent services for each game (Snake, Tetris, Pong)
 
 ![Architecture Diagram](/Documentation/CookedDocumentation/CookedGraph.png)
@@ -47,8 +48,8 @@ The application is built using a microservices architecture with the following c
    ```
 
 2. Start all services using Docker Compose:
-   ```bash
-   docker-compose up
+   ```
+   env=containersLocal docker compose up -d
    ```
 
 3. Access the application:
@@ -92,41 +93,14 @@ Visual Studio automatically handles:
 
 ### Setting Up AWS Resources
 
-1. Create an AWS account if you don't have one
-2. Create a new EC2 instance:
-   - Recommended: t2.micro (or larger for production)
-   - Amazon Linux 2 or Ubuntu Server
-   - Configure security group to allow inbound traffic on ports 22 (SSH), 80 (HTTP), and 443 (HTTPS), 8080 (WebApp), 8081 (Gateway), 8082-8084 (Games)
-
-3. Connect to your EC2 instance:
-   
-   **Option 1: AWS Console (Recommended)**
-   - Go to the AWS EC2 Console
-   - Select your EC2 instance
-   - Click "Connect" button at the top of the page
-   - Choose the "EC2 Instance Connect" tab
-   - Click "Connect" to access the browser-based terminal
-
-   **Option 2: SSH Connection**
-   ```bash
-   ssh -i /path/to/your-key.pem ec2-user@your-ec2-public-dns
-   ```
-
-4. Install required software packages by running [EC2-init.sh](/Scripts/ec2_init.sh):
-
-5. Clone the repository and start the services:
-   ```bash
-   git clone https://github.com/Andersonjb1/BucStop-QWERTY.git
-   cd BucStop-QWERTY
-   docker-compose up
-   ```
+__See (Documentation/AWS-Setup)__
 
 ### Environment Configuration
 
 The application supports multiple environments through configuration files:
 
 - `appsettings.Development.json`: Local development settings (please don't use this - for your own sanity)
-- `appsettings.containersLocal.json`: Local Docker container settings
+- `appsettings.containersLocal.json`: Local Docker container settings **(Default Config)**
 - `appsettings.containers.json`: Production container settings
 - `appsettings.Production.json`: Production settings (currently deprecated - consider removing)
 
@@ -140,13 +114,14 @@ env=containers docker-compose up -d
 
 ```
 BucStop-QWERTY/
-├── Bucstop WebApp/            # Main web application
+├── BucStop_WebApp/            # Main web application
 │   └── BucStop/
 │       ├── Controllers/       # MVC controllers
 │       ├── Views/             # UI templates
 │       ├── Models/            # Data models
 │       ├── Services/          # Business logic
 │       └── MicroServices/     # Service communication
+├── BucStop_SubmissionGateway  # Submission Gateway service
 ├── Team-3-BucStop_APIGateway/ # API Gateway service
 ├── Team-3-BucStop_Snake/      # Snake game microservice
 ├── Team-3-BucStop_Tetris/     # Tetris game microservice
@@ -183,11 +158,11 @@ All services use Serilog for structured logging:
 
 ```bash
 # View logs for all containers
-docker-compose logs
+docker compose logs
 
 # View logs for a specific service
-docker-compose logs bucstop
-docker-compose logs api-gateway
+docker compose logs bucstop
+docker compose logs api-gateway
 ```
 
 ## License

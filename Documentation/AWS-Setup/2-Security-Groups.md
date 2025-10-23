@@ -27,14 +27,11 @@ This guide explains how to configure an AWS Security Group so that:
 
 Add the following rules:
 
-| Port(s)   | Protocol | Source                         | Purpose                                 |
-| --------- | -------- | ------------------------------ | --------------------------------------- |
-| 22        | TCP      | `<your-ip>/32`                 | Admin SSH access (replace with your IP) |
-| 80        | TCP      | `151.141.0.0/16`               | Allow web traffic from CIDR block 1     |
-| 80        | TCP      | `216.145.70.0/23`              | Allow web traffic from CIDR block 2     |
-| 443       | TCP      | `151.141.0.0/16`               | Allow HTTPS traffic from CIDR block 1   |
-| 443       | TCP      | `216.145.70.0/23`              | Allow HTTPS traffic from CIDR block 2   |
-| 8080–8084 | TCP      | This security group (self-ref) | Microservices internal communication    |
+| Port(s)     | Protocol | Source            | Purpose                                      |
+| ----------- | -------- | ----------------- | -------------------------------------------- |
+| 22          | TCP      | `<your-ip>/32`    | Admin SSH access (replace with your IP)      |
+| All Traffic | TCP      | `151.141.0.0/16`  | Allow web traffic from ETSU Wifi CIDR block  |
+| All Traffic | TCP      | `216.145.70.0/23` | Allow web traffic from ETSU E-NET CIDR block |
 
 ---
 
