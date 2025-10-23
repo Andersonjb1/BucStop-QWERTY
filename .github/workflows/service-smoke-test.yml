@@ -1,0 +1,88 @@
+name: Service Smoke Tests
+
+on:
+  pull_request:
+    branches: ["**"]  # Run for PRs targeting any branch
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: ["**"]  # Run on push to any branch
+
+# Prevents duplicate runs on the same PR/branch
+concurrency:
+  group: smoke-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke_test:
+    runs-on: ubuntu-latest
+    # Skip if PR is closed and not merged
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' || github.event.pull_request.merged == true }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history (useful for context if needed)
+
+      - name: Set up Docker (if services are containerized)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Start Containers
+        run: |
+          echo "Starting containers (if docker-compose.yml is present)..."
+          if [ -f docker-compose.yml ]; then
+            timeout 300s bash -c '
+              docker compose up -d
+              echo "Waiting for containers to initialize..."
+              docker compose ps
+              sleep 10
+            '
+          else
+            echo "No docker-compose.yml found — assuming services already running."
+          fi
+
+      - name: Run BucStop Smoke Tests
+        shell: bash
+        run: |
+          # --- Configuration ---
+          SERVICES=("API Gateway" "Snake" "Pong" "Tetris" "WebApp")
+          PORTS=(8081 8082 8083 8084 8080)
+          ENDPOINTS=("/health" "/health" "/health" "/health" "/")
+          BASE_URL="http://localhost"
+
+          echo "Running smoke tests for BucStop services at ${BASE_URL}..."
+          echo "---------------------------------------------------------"
+
+          for i in "${!SERVICES[@]}"; do
+              SERVICE="${SERVICES[$i]}"
+              PORT="${PORTS[$i]}"
+              ENDPOINT="${ENDPOINTS[$i]}"
+              URL="${BASE_URL}:${PORT}${ENDPOINT}"
+
+              echo -n "Checking ${SERVICE} (${PORT}) at ${URL}... "
+
+              # curl -sSf:
+              #   -s = silent mode
+              #   -S = show errors
+              #   -f = fail on HTTP errors (non-2xx)
+              # --max-time 10 prevents long hangs
+              if curl -sSf --max-time 10 "${URL}" > /dev/null; then
+                  echo "✅ OK"
+              else
+                  echo "❌ FAILED"
+                  echo "Error: ${SERVICE} health check failed at ${URL}"
+                  docker compose logs || true
+                  exit 1
+              fi
+          done
+
+          echo "---------------------------------------------------------"
+          echo "🎉 All smoke tests passed!"
+
+      - name: Shut Down Containers
+        if: always()
+        run: |
+          if [ -f docker-compose.yml ]; then
+            echo "Stopping containers..."
+            docker compose down
+          fi
