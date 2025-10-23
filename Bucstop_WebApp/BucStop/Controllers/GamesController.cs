@@ -1,4 +1,4 @@
-﻿﻿using BucStop.Models;
+﻿using BucStop.Models;
 using BucStop.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

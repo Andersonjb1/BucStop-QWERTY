@@ -2,4 +2,9 @@ Game Name:
 
 Description:
 
+<<<<<<< HEAD:Bucstop_WebApp/BucStop/wwwroot/Game_Suggestion_Form.txt
 Optional JavaScript Implementation:
+=======
+Optional JavaScript Implementation:
+
+>>>>>>> origin/Joe-136:Bucstop WebApp/BucStop/wwwroot/Game_Suggestion_Form.txt
