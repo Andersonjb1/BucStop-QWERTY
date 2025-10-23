@@ -6,7 +6,7 @@
 # - Ensures at the end that all 5 service images exist in GHCR (builds any missing ones from the default branch)
 #
 # Services:
-# - webapp  -> "BucStop_WebApp/BucStop/"
+# - webapp  -> "Bucstop_WebApp/BucStop/"
 # - gateway -> "Team-3-BucStop_APIGateway/APIGateway/"
 # - snake   -> "Team-3-BucStop_Snake/Snake/"
 # - pong    -> "Team-3-BucStop_Pong/Pong/"
@@ -56,8 +56,8 @@ jobs:
         with:
           filters: |
             webapp:
-              - 'BucStop_WebApp/BucStop/**'
-              - 'BucStop_WebApp/**'
+              - 'Bucstop_WebApp/BucStop/**'
+              - 'Bucstop_WebApp/**'
               - 'BucStop/**'
             gateway:
               - 'Team-3-BucStop_APIGateway/APIGateway/**'
@@ -105,12 +105,7 @@ jobs:
     name: Build & push changed microservice images
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
-    ##################################################
-
-    # if anything ever breaks, check this if statement first
-
-    ##################################################
-    if: ${{ needs.detect-changes.outputs.services }}
+    if: ${{ needs.detect-changes.outputs == "true" }}
     strategy:
       fail-fast: false
       matrix:
