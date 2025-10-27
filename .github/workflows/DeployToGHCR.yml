@@ -105,11 +105,12 @@ jobs:
     name: Build & push changed microservice images
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
+    #if: needs.detect-changes.outputs.services != ''
     strategy:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.services) }}
-    if: matrix.service
+    if: ${{ matrix.service }}
     env:
       GHCR_REGISTRY: ghcr.io
       IMAGE_NAMESPACE: ${{ needs.set-namespace.outputs.namespace }}
