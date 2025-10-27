@@ -105,7 +105,7 @@ jobs:
     name: Build & push changed microservice images
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
-    if: needs.detect-changes.outputs.services != ''
+    if: needs.detect-changes.outputs.services != '' && needs.detect-changes.outputs.services != '[]'
     strategy:
       fail-fast: false
       matrix:
@@ -143,6 +143,10 @@ jobs:
             tetris)
               path="Team-3-BucStop_Tetris/Tetris"
               dockerfile="Team-3-BucStop_Tetris/Tetris/Dockerfile"
+              ;;
+            ""|0)
+              echo "no changed services detected"
+              exit 0
               ;;
             *)
               echo "Unknown service: $svc"
