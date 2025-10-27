@@ -105,7 +105,7 @@ jobs:
     name: Build & push changed microservice images
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
-    if: ${{ needs.detect-changes.outputs.services }}
+    #if: ${{ needs.detect-changes.outputs.services }}
     strategy:
       fail-fast: false
       matrix:
@@ -123,6 +123,10 @@ jobs:
         id: set-path
         run: |
           svc=${{ matrix.service }}
+          if [[ -z "$svc" ]]; then
+            echo "No service provided to build-changed matrix. Exiting as expected."
+            exit 0
+          fi
           case "$svc" in
             webapp)
               path="Bucstop_WebApp/BucStop"
