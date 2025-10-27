@@ -7,8 +7,6 @@ using System.Text;
 using BucStop.Models;
 using BucStop.Controllers;
 
-// TESTING DEPLOY ACTION
-
 namespace BucStop
 {
     public class MicroClient

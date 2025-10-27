@@ -7,8 +7,6 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using Gateway;
 
-// TESTING DEPLOY ACTION
-
 namespace Gateway
 {
     [ApiController]
