@@ -139,12 +139,27 @@ namespace BucStop.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // “Send to the void” — don’t store anything for now
-            using (var stream = new MemoryStream())
-            {
-                await file.CopyToAsync(stream);
-                // Do nothing with the stream — discard it
-            }
+            // Define the Docker-mounted directory path
+    var submissionDirectory = "/app/Submissions";
+
+    // Ensure directory exists (it should, but just in case)
+    if (!Directory.Exists(submissionDirectory))
+    {
+        Directory.CreateDirectory(submissionDirectory);
+    }
+
+    // Create a unique filename: username + timestamp
+    var safeUsername = string.IsNullOrWhiteSpace(username) ? "anonymous" : username;
+    var uniqueFileName = $"{safeUsername}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
+
+    // Full path inside container (which maps to the Docker volume)
+    var filePath = Path.Combine(submissionDirectory, uniqueFileName);
+
+    // Save file to the Docker volume
+    using (var stream = new FileStream(filePath, FileMode.Create))
+    {
+        await file.CopyToAsync(stream);
+    }
 
             TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
             return RedirectToAction("Index", "Home");
