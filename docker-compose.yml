@@ -19,6 +19,7 @@ services:
       - snapshots-data:/app/Snapshots
       - logs-data:/app/Logs
       - ./SharedSuggestions:/app/SharedSuggestions   # persistent local folder for game suggestions
+      - submission-data:/app/Submissions
 
   api-gateway:
     image: ghcr.io/andersonjb1/bucstop-qwerty/gateway:latest
@@ -83,8 +84,8 @@ services:
       - bucstop-network
     environment:
       - DOTNET_ENVIRONMENT=${env:-containers}
-    volumes:
-      - submission-data:/app/Submissions
+    #volumes:
+    #  - submission-data:/app/Submissions
 
   # Watchtower is an all in one CI/CD tool that allows us to periodically
   # check and see if our containers can be updated. If they can, it performs a
