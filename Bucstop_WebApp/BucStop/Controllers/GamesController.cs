@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace BucStop.Controllers
 {
-    [Authorize]
+    [AllowAnonymous]
     public class GamesController : Controller
     {
         private readonly MicroClient _httpClient;
