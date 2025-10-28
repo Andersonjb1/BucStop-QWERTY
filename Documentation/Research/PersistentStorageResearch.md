@@ -102,7 +102,19 @@ docker run --rm --mount source=<volume-name>,target=<target> -v $(pwd):/backup b
 
 ## Alternative Methods
 
-Bind mounts are good if you need to access files/directories from both containers and the host, but I don’t see a reason for us to use these.
+Bind mounts are good if you need to access files/directories from both containers and the host, but I don’t see a reason for us to use these. Bind mounts are more typically used for development resources rather than persistent storage.
+
+Bind mounts are appropriate for the following types of use case:
+
+- Sharing source code or build artifacts between a development environment on the Docker host and a container.
+- When you want to create or generate files in a container and persist the files onto the host's filesystem.
+- Sharing configuration files from the host machine to containers. This is how Docker provides DNS resolution to containers by default, by mounting /etc/resolv.conf from the host machine into each container.
+
+AWS S3 is also another solution to persistent storage, but due to the fact that we have limited AWS credits at the free tier, and this would require future students to recreate the setup created with AWS S3 each semester. It was determined this was not as scalable and maintainable of solution as others.
+
+- As of July 15, 2025, new AWS customers will receive up to $200 in AWS Free Tier credits, which can be applied towards eligible AWS services, including Amazon S3
+- AWS S3 is used for storing and retrieving any amount of data, making it suitable for use cases like hosting static websites
+- You pay for requests made against your S3 buckets and objects. S3 request costs are based on the request type, and are charged on the quantity of requests
 
 ## Helpful Sources
 
