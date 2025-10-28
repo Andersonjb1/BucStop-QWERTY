@@ -140,32 +140,29 @@ namespace BucStop.Controllers
             }
 
             // Define the Docker-mounted directory path
-    var submissionDirectory = "/app/Submissions";
+            var submissionDirectory = "/app/Submissions";
 
-    // Ensure directory exists (it should, but just in case)
-    if (!Directory.Exists(submissionDirectory))
-    {
-        Directory.CreateDirectory(submissionDirectory);
-    }
+            // Ensure directory exists (it should, but just in case)
+            if (!Directory.Exists(submissionDirectory))
+            {
+                Directory.CreateDirectory(submissionDirectory);
+            }
 
-    // Create a unique filename: username + timestamp
-    var safeUsername = string.IsNullOrWhiteSpace(username) ? "anonymous" : username;
-    var uniqueFileName = $"{safeUsername}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
+            // Create a unique filename: username + timestamp
+            var safeUsername = string.IsNullOrWhiteSpace(username) ? "anonymous" : username;
+            var uniqueFileName = $"{safeUsername}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
 
-    // Full path inside container (which maps to the Docker volume)
-    var filePath = Path.Combine(submissionDirectory, uniqueFileName);
+            // Full path inside container (which maps to the Docker volume)
+            var filePath = Path.Combine(submissionDirectory, uniqueFileName);
 
-    // Save file to the Docker volume
-    using (var stream = new FileStream(filePath, FileMode.Create))
-    {
-        await file.CopyToAsync(stream);
-    }
+            // Save file to the Docker volume
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
 
             TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
             return RedirectToAction("Index", "Home");
         }
-
-
     }
-
 }
