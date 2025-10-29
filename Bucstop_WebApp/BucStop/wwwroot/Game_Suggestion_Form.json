@@ -1,8 +1,0 @@
-{
-  "Title": "My Awesome Game",
-  "Author": "Your Name or Alias",
-  "Description": "A fun and engaging game where players can... (Write at least 20 characters describing your game's theme, features, and what makes it unique)",
-  "HowToPlay": "Use arrow keys to move, spacebar to jump, and collect coins to win! (Explain the controls and objective clearly)",
-  "JavaScriptCode": "// Optional: Paste your JavaScript game code here\n// Do NOT include HTML or CSS\n// Example:\n// function startGame() {\n//   // Your game logic\n// }",
-  "ThumbnailUrl": "https://example.com/your-game-thumbnail.png"
-}
