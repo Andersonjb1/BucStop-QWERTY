@@ -19,6 +19,7 @@ services:
     volumes:
       - snapshots-data:/app/Snapshots
       - logs-data:/app/Logs
+      - submission-data:/app/Submissions
 
   api-gateway:
     build:
@@ -82,8 +83,8 @@ services:
       - bucstop-network
     environment:
       - DOTNET_ENVIRONMENT=${env:-containersLocal}
-    volumes:
-      - submission-data:/app/Submissions
+    #volumes:
+    #  - submission-data:/app/Submissions
 
   watchtower:
     image: containrrr/watchtower:latest
