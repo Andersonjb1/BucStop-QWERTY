@@ -1,6 +1,0 @@
-Game Name: 
-
-Description:
-
-Optional JavaScript Implementation:
-

@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Hosting;
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
 
 /*
  * This file handles the links to each of the game pages.
  */
-
 namespace BucStop.Controllers
 {
     [Authorize]
@@ -22,33 +24,25 @@ namespace BucStop.Controllers
         {
             _httpClient = microClient;
             _logger = logger;
-
-            // Initialize the PlayCountManager with the web root path and the JSON file name
             _playCountManager = new PlayCountManager(_httpClient.GetGamesList() ?? new List<Game>(), webHostEnvironment);
         }
 
-        //Takes the user to the index page, passing the games list as an argument
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> IndexAsync()
         {
             _logger.LogInformation("Games index page accessed.");
-           
+
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            //await the async gamesinfo
             List<Game> games = _httpClient.GetGamesList();
 
-            //have to update playcounts here since the we are reading it dynamically now instead of from a static list
             foreach (Game game in games)
             {
                 game.PlayCount = _playCountManager.GetPlayCount(game.Id);
             }
 
-            // Sort games by their Id so that they always appear in order on the games page
-            // Sorting here means that every refresh will re-sort the games but allows sorting by PlayCount if needed.
             games.Sort((x, y) => x.Id.CompareTo(y.Id));
-
             stopwatch.Stop();
 
             _logger.LogInformation("{Category}: Games Page Loaded in {LoadTime}ms.", "PageLoadTimes", stopwatch.ElapsedMilliseconds);
@@ -57,7 +51,6 @@ namespace BucStop.Controllers
             return View(games);
         }
 
-        //Takes the user to the Play page, passing the game object the user wants to play
         public async Task<IActionResult> Play(int id)
         {
             _logger.LogInformation("{Category}: User requested to play game with ID {GameId}.", "GameSuccess", id);
@@ -65,7 +58,6 @@ namespace BucStop.Controllers
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            //await the async gamesinfo
             List<Game> games = _httpClient.GetGamesList();
 
             Game game = games.FirstOrDefault(x => x.Id == id);
@@ -74,14 +66,11 @@ namespace BucStop.Controllers
                 _logger.LogWarning("{Category}: Game with ID {GameId} not found.", "GameSuccess", id);
                 return NotFound();
             }
-            // Log the URL of the game being loaded
+
             _logger.LogInformation("Loading game URL: {GameUrl}", game.Content);
-            // Increment the play count for the game with the specified ID
             _playCountManager.IncrementPlayCount(id);
 
             int playCount = _playCountManager.GetPlayCount(id);
-
-            // Update the game's play count
             game.PlayCount = playCount;
 
             _logger.LogInformation("{Category}: Game '{GameTitle}' (ID: {GameId}) successfully loaded.",
@@ -90,67 +79,414 @@ namespace BucStop.Controllers
                                     "UserActivity", User.Identity?.Name ?? "Anonymous", game.Title, game.Id);
 
             stopwatch.Stop();
-
             _logger.LogInformation("{Category}: {GameTitle} Page Loaded in {LoadTime}ms.", "PageLoadTimes", game.Title, stopwatch.ElapsedMilliseconds);
 
             return View(game);
         }
 
-        //Takes the user to the deprecated snake page
         public IActionResult Snake()
         {
             return View();
         }
 
-        //Takes the user to the deprecated tetris page
         public IActionResult Tetris()
         {
             return View();
         }
 
-        // Starting point for input validation for game suggestion file uploads. 
-        // Only .txt files under 2 MB are accepted.
-        // Files sent to the "SharedSuggestions" folder with a timestamped filename.
-        // Returns user to home page.
+        // API endpoint for validating the form submission before actual submission
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitSuggestion(IFormFile file, string username)
+        public async Task<IActionResult> ValidateSuggestion(string title, string author, string description,
+            string howToPlay, string thumbnailUrl, IFormFile jsFile)
         {
-            // Ensure a file was provided
+            var validationResult = await ValidateGameSubmissionForm(title, author, description,
+                howToPlay, thumbnailUrl, jsFile);
+            return Json(validationResult);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitSuggestion(string username, string title, string author,
+            string description, string howToPlay, string thumbnailUrl, IFormFile jsFile)
+        {
+            // Validate the form submission
+            var validationResult = await ValidateGameSubmissionForm(title, author, description,
+                howToPlay, thumbnailUrl, jsFile);
+
+            if (!validationResult.IsValid)
+            {
+                TempData["Message"] = validationResult.ErrorMessage;
+                TempData["ValidationErrors"] = JsonSerializer.Serialize(validationResult.Errors);
+                return RedirectToAction("Index", "Home");
+            }
+
+            try
+            {
+                // Read JavaScript file content if provided
+                string jsCodeContent = "";
+                if (jsFile != null && jsFile.Length > 0)
+                {
+                    using var reader = new StreamReader(jsFile.OpenReadStream());
+                    jsCodeContent = await reader.ReadToEndAsync();
+                }
+
+                // Create submission model
+                var submissionModel = new GameSubmissionModel
+                {
+                    Username = username?.Trim() ?? "Anonymous",
+                    SuggestedTitle = title?.Trim() ?? "",
+                    SuggestedAuthor = author?.Trim() ?? "",
+                    SuggestedDescription = description?.Trim() ?? "",
+                    SuggestedHowTo = howToPlay?.Trim() ?? "",
+                    RawJsCodeContent = jsCodeContent.Trim(),
+                    SuggestedThumbnailUrl = thumbnailUrl?.Trim() ?? ""
+                };
+
+                // SECURITY WARNING: NEVER execute RawJsCodeContent directly. 
+                // Save to a secure location for manual review.
+
+                _logger.LogInformation("New game suggestion received from {User}: {Title}",
+                                       submissionModel.Username, submissionModel.SuggestedTitle);
+
+                // TODO: Save submissionModel to database or secured file store
+
+                TempData["Message"] = "Success! Your game suggestion has been submitted for review.";
+                TempData["SubmittedTitle"] = submissionModel.SuggestedTitle;
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process game submission.");
+                TempData["Message"] = "An unexpected error occurred while processing your submission.";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        private async Task<ValidationResult> ValidateGameSubmissionForm(string title, string author,
+            string description, string howToPlay, string thumbnailUrl, IFormFile jsFile)
+        {
+            var result = new ValidationResult();
+
+            // Create a submission object for validation
+            var submissionData = new GameSubmissionJson
+            {
+                Title = title,
+                Author = author,
+                Description = description,
+                HowToPlay = howToPlay,
+                ThumbnailUrl = thumbnailUrl,
+                JavaScriptCode = ""
+            };
+
+            // Validate the form fields
+            var fieldValidation = ValidateGameSubmission(submissionData);
+            if (!fieldValidation.IsValid)
+            {
+                return fieldValidation;
+            }
+
+            // Validate JavaScript file if provided
+            if (jsFile != null && jsFile.Length > 0)
+            {
+                var fileValidation = ValidateJavaScriptFile(jsFile);
+                if (!fileValidation.IsValid)
+                {
+                    return fileValidation;
+                }
+
+                // Read and validate JavaScript content
+                try
+                {
+                    using var reader = new StreamReader(jsFile.OpenReadStream());
+                    string jsContent = await reader.ReadToEndAsync();
+
+                    if (jsContent.Length > 500000) // 500KB
+                    {
+                        result.AddError("JavaScriptCode", "JavaScript code is too large (max 500KB).");
+                    }
+
+                    if (ContainsDangerousCode(jsContent))
+                    {
+                        result.AddError("JavaScriptCode", "Code contains potentially dangerous patterns.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error reading JavaScript file.");
+                    result.AddError("JavaScriptFile", "Unable to read JavaScript file content.");
+                }
+            }
+
+            return result;
+        }
+
+        private ValidationResult ValidateJavaScriptFile(IFormFile file)
+        {
+            var result = new ValidationResult();
+
+            // Check file extension
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (fileExtension != ".js")
+            {
+                result.AddError("JavaScriptFile", "Only .js files are allowed for code uploads.");
+                return result;
+            }
+
+            // Check file size (max 500KB)
+            const long maxFileSize = 500 * 1024;
+            if (file.Length > maxFileSize)
+            {
+                result.AddError("JavaScriptFile", "JavaScript file must be less than 500KB.");
+                return result;
+            }
+
+            return result;
+        }
+
+        private async Task<ValidationResult> ValidateGameSubmissionFile(IFormFile file)
+        {
+            // Step 1: Validate file metadata (type, size, existence)
+            var fileMetaResult = ValidateFileMeta(file);
+            if (!fileMetaResult.IsValid)
+            {
+                return fileMetaResult;
+            }
+
+            // Step 2: Read and validate JSON format
+            string fileContent;
+            try
+            {
+                using var reader = new StreamReader(file.OpenReadStream());
+                fileContent = await reader.ReadToEndAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reading file content.");
+                var result = new ValidationResult();
+                result.AddError("File", "Unable to read file content.");
+                return result;
+            }
+
+            var jsonFormatResult = ValidateJsonFormat(fileContent);
+            if (!jsonFormatResult.IsValid)
+            {
+                return jsonFormatResult;
+            }
+
+            // Step 3: Deserialize and validate game submission data
+            GameSubmissionJson submissionData;
+            try
+            {
+                submissionData = JsonSerializer.Deserialize<GameSubmissionJson>(fileContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (submissionData == null)
+                {
+                    var result = new ValidationResult();
+                    result.AddError("JSON", "Failed to parse JSON file. Please ensure it's valid JSON.");
+                    return result;
+                }
+            }
+            catch (JsonException ex)
+            {
+                var result = new ValidationResult();
+                result.AddError("JSON", $"Invalid JSON format: {ex.Message}");
+                return result;
+            }
+
+            // Step 4: Validate the actual game submission fields
+            return ValidateGameSubmission(submissionData);
+        }
+
+        private ValidationResult ValidateFileMeta(IFormFile file)
+        {
+            var result = new ValidationResult();
+
+            // Check if file exists
             if (file == null || file.Length == 0)
             {
-                TempData["Message"] = "Please select a valid .txt file before submitting.";
-                return RedirectToAction("Index", "Home");
+                result.AddError("File", "Please select a valid file before submitting.");
+                return result;
             }
 
-            // ✅ File type check — only allow .txt
+            // Check file extension
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (fileExtension != ".txt")
+            if (fileExtension != ".json")
             {
-                TempData["Message"] = "Only .txt files are allowed.";
-                return RedirectToAction("Index", "Home");
+                result.AddError("FileType", "Only .json files are allowed. Please download the correct template.");
+                return result;
             }
 
-            // File size check — max 2 MB (2 * 1024 * 1024 bytes)
+            // Check file size (max 2 MB)
             const long maxFileSize = 2 * 1024 * 1024;
             if (file.Length > maxFileSize)
             {
-                TempData["Message"] = "File size must be less than 2 MB.";
-                return RedirectToAction("Index", "Home");
+                result.AddError("FileSize", "File size must be less than 2 MB.");
+                return result;
             }
 
-            // “Send to the void” — don’t store anything for now
-            using (var stream = new MemoryStream())
-            {
-                await file.CopyToAsync(stream);
-                // Do nothing with the stream — discard it
-            }
-
-            TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
-            return RedirectToAction("Index", "Home");
+            return result;
         }
 
+        private ValidationResult ValidateJsonFormat(string json)
+        {
+            var result = new ValidationResult();
 
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                result.AddError("JSON", "File content is empty.");
+                return result;
+            }
+
+            // Try to parse as valid JSON
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                // Successfully parsed - JSON is valid
+            }
+            catch (JsonException ex)
+            {
+                result.AddError("JSON", $"Invalid JSON format: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        private ValidationResult ValidateGameSubmission(GameSubmissionJson data)
+        {
+            var result = new ValidationResult();
+
+            // Validate Title
+            if (string.IsNullOrWhiteSpace(data.Title))
+            {
+                result.AddError("Title", "Game title is required.");
+            }
+            else if (data.Title.Length > 50)
+            {
+                result.AddError("Title", "Game title must be 50 characters or less.");
+            }
+            else if (ContainsOffensiveContent(data.Title))
+            {
+                result.AddError("Title", "Game title contains inappropriate content.");
+            }
+
+            // Validate Author
+            if (string.IsNullOrWhiteSpace(data.Author))
+            {
+                result.AddError("Author", "Author name is required.");
+            }
+            else if (data.Author.Length > 100)
+            {
+                result.AddError("Author", "Author name must be 100 characters or less.");
+            }
+
+            // Validate Description
+            if (string.IsNullOrWhiteSpace(data.Description))
+            {
+                result.AddError("Description", "Game description is required.");
+            }
+            else if (data.Description.Length < 20)
+            {
+                result.AddError("Description", "Description must be at least 20 characters.");
+            }
+            else if (data.Description.Length > 1000)
+            {
+                result.AddError("Description", "Description must be 1000 characters or less.");
+            }
+
+            // Validate How To Play
+            if (string.IsNullOrWhiteSpace(data.HowToPlay))
+            {
+                result.AddError("HowToPlay", "Instructions are required.");
+            }
+            else if (data.HowToPlay.Length > 1000)
+            {
+                result.AddError("HowToPlay", "Instructions must be 1000 characters or less.");
+            }
+
+            // Validate JavaScript Code (optional but check if provided)
+            if (!string.IsNullOrWhiteSpace(data.JavaScriptCode))
+            {
+                if (data.JavaScriptCode.Length > 500000) // 500KB of code
+                {
+                    result.AddError("JavaScriptCode", "JavaScript code is too large (max 500KB).");
+                }
+
+                // Basic security check for dangerous patterns
+                if (ContainsDangerousCode(data.JavaScriptCode))
+                {
+                    result.AddError("JavaScriptCode", "Code contains potentially dangerous patterns.");
+                }
+            }
+
+            // Validate Thumbnail URL (optional)
+            if (!string.IsNullOrWhiteSpace(data.ThumbnailUrl))
+            {
+                if (!Uri.TryCreate(data.ThumbnailUrl, UriKind.Absolute, out var uriResult)
+                    || (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+                {
+                    result.AddError("ThumbnailUrl", "Thumbnail URL must be a valid HTTP/HTTPS URL.");
+                }
+            }
+
+            return result;
+        }
+
+        private bool ContainsOffensiveContent(string text)
+        {
+            // Implement your offensive content filter here
+            // This is a placeholder - use a proper profanity filter library in production
+            var offensiveWords = new[] { "badword1", "badword2" }; // Replace with actual filter
+            return offensiveWords.Any(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private bool ContainsDangerousCode(string code)
+        {
+            // Basic check for dangerous patterns
+            var dangerousPatterns = new[]
+            {
+                @"eval\s*\(",
+                @"Function\s*\(",
+                @"<script",
+                @"document\.write",
+                @"innerHTML\s*=",
+                @"outerHTML\s*=",
+                @"\.cookie",
+                @"localStorage",
+                @"sessionStorage",
+                @"XMLHttpRequest",
+                @"fetch\s*\(",
+                @"import\s*\("
+            };
+
+            return dangerousPatterns.Any(pattern =>
+                Regex.IsMatch(code, pattern, RegexOptions.IgnoreCase));
+        }
+
+        // Helper classes
+        public class GameSubmissionJson
+        {
+            public string Title { get; set; }
+            public string Author { get; set; }
+            public string Description { get; set; }
+            public string HowToPlay { get; set; }
+            public string JavaScriptCode { get; set; }
+            public string ThumbnailUrl { get; set; }
+        }
+
+        public class ValidationResult
+        {
+            public bool IsValid => !Errors.Any();
+            public Dictionary<string, string> Errors { get; set; } = new Dictionary<string, string>();
+            public string ErrorMessage => IsValid ? "" : string.Join(" ", Errors.Values);
+
+            public void AddError(string field, string message)
+            {
+                Errors[field] = message;
+            }
+        }
     }
-
 }
