@@ -350,6 +350,26 @@ namespace BucStop.Controllers
             catch (JsonException ex)
             {
                 result.AddError("JSON", $"Invalid JSON format: {ex.Message}");
+            // Define the Docker-mounted directory path
+            var submissionDirectory = "/app/Submissions";
+
+            // Ensure directory exists (it should, but just in case)
+            if (!Directory.Exists(submissionDirectory))
+            {
+                Directory.CreateDirectory(submissionDirectory);
+            }
+
+            // Create a unique filename: username + timestamp
+            var safeUsername = string.IsNullOrWhiteSpace(username) ? "anonymous" : username;
+            var uniqueFileName = $"{safeUsername}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
+
+            // Full path inside container (which maps to the Docker volume)
+            var filePath = Path.Combine(submissionDirectory, uniqueFileName);
+
+            // Save file to the Docker volume
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
             }
 
             return result;
@@ -488,5 +508,7 @@ namespace BucStop.Controllers
                 Errors[field] = message;
             }
         }
+    }
+}
     }
 }
