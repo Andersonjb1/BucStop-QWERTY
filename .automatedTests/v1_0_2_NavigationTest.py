@@ -213,9 +213,9 @@ try:
     add_link.click()
 
     time.sleep(1)
-    headers = driver.find_elements(By.XPATH, "//h2[text()='Submission Form']")
+    headers = driver.find_elements(By.XPATH, "//h1[text()='Game Suggestion Guide']")
     print(f"Headers: {headers}")
-    assert len(headers) > 0, f"Couldn't find the h2 tag with the text 'Submission Form' on this page"
+    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Game Suggestion Guide' on this page"
 
     
     
