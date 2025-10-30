@@ -62,7 +62,7 @@ jobs:
 
     - name: Run Navigation Selenium Test
       run: |
-        python ./.automatedTests/v1_0_1_NavigationTest.py
+        python ./.automatedTests/v1_0_2_NavigationTest.py
 
     - name: Run Play Base Games Selenium Test
       run: |
