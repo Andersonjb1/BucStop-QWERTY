@@ -48,11 +48,10 @@ builder.Services.AddHttpClient<MicroClient>(client =>
 });
 
 
-/*builder.Services.AddAuthentication("CustomAuthenticationScheme").AddCookie("CustomAuthenticationScheme", options =>
+builder.Services.AddAuthentication("CustomAuthenticationScheme").AddCookie("CustomAuthenticationScheme", options =>
 {
     options.LoginPath = "/Account/Login";
 });
-*/
 
 // Ensure directories exist
 var snapshotsPath = Path.Combine(builder.Environment.ContentRootPath, "Snapshots");
@@ -89,10 +88,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-/*
 app.UseAuthentication();
 app.UseAuthorization();
-*/
 
 //Handles routing to "separate" game pages by setting the Play page to have subpages depending on ID
 app.MapControllerRoute(
