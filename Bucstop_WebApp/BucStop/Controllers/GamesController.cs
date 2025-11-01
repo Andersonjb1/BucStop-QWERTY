@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
  */
 namespace BucStop.Controllers
 {
-    [Authorize]
+    
     public class GamesController : Controller
     {
         private readonly MicroClient _httpClient;
@@ -175,8 +175,7 @@ namespace BucStop.Controllers
                 Author = author,
                 Description = description,
                 HowToPlay = howToPlay,
-                ThumbnailUrl = thumbnailUrl,
-                JavaScriptCode = ""
+                ThumbnailUrl = thumbnailUrl
             };
 
             // Validate the form fields
@@ -244,117 +243,6 @@ namespace BucStop.Controllers
             return result;
         }
 
-        private async Task<ValidationResult> ValidateGameSubmissionFile(IFormFile file)
-        {
-            // Step 1: Validate file metadata (type, size, existence)
-            var fileMetaResult = ValidateFileMeta(file);
-            if (!fileMetaResult.IsValid)
-            {
-                return fileMetaResult;
-            }
-
-            // Step 2: Read and validate JSON format
-            string fileContent;
-            try
-            {
-                using var reader = new StreamReader(file.OpenReadStream());
-                fileContent = await reader.ReadToEndAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error reading file content.");
-                var result = new ValidationResult();
-                result.AddError("File", "Unable to read file content.");
-                return result;
-            }
-
-            var jsonFormatResult = ValidateJsonFormat(fileContent);
-            if (!jsonFormatResult.IsValid)
-            {
-                return jsonFormatResult;
-            }
-
-            // Step 3: Deserialize and validate game submission data
-            GameSubmissionJson submissionData;
-            try
-            {
-                submissionData = JsonSerializer.Deserialize<GameSubmissionJson>(fileContent, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (submissionData == null)
-                {
-                    var result = new ValidationResult();
-                    result.AddError("JSON", "Failed to parse JSON file. Please ensure it's valid JSON.");
-                    return result;
-                }
-            }
-            catch (JsonException ex)
-            {
-                var result = new ValidationResult();
-                result.AddError("JSON", $"Invalid JSON format: {ex.Message}");
-                return result;
-            }
-
-            // Step 4: Validate the actual game submission fields
-            return ValidateGameSubmission(submissionData);
-        }
-
-        private ValidationResult ValidateFileMeta(IFormFile file)
-        {
-            var result = new ValidationResult();
-
-            // Check if file exists
-            if (file == null || file.Length == 0)
-            {
-                result.AddError("File", "Please select a valid file before submitting.");
-                return result;
-            }
-
-            // Check file extension
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (fileExtension != ".json")
-            {
-                result.AddError("FileType", "Only .json files are allowed. Please download the correct template.");
-                return result;
-            }
-
-            // Check file size (max 2 MB)
-            const long maxFileSize = 2 * 1024 * 1024;
-            if (file.Length > maxFileSize)
-            {
-                result.AddError("FileSize", "File size must be less than 2 MB.");
-                return result;
-            }
-
-            return result;
-        }
-
-        private ValidationResult ValidateJsonFormat(string json)
-        {
-            var result = new ValidationResult();
-
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                result.AddError("JSON", "File content is empty.");
-                return result;
-            }
-
-            // Try to parse as valid JSON
-            try
-            {
-                using var doc = JsonDocument.Parse(json);
-                // Successfully parsed - JSON is valid
-            }
-            catch (JsonException ex)
-            {
-                result.AddError("JSON", $"Invalid JSON format: {ex.Message}");
-            }
-
-            return result;
-        }
-
         private ValidationResult ValidateGameSubmission(GameSubmissionJson data)
         {
             var result = new ValidationResult();
@@ -405,21 +293,6 @@ namespace BucStop.Controllers
             else if (data.HowToPlay.Length > 1000)
             {
                 result.AddError("HowToPlay", "Instructions must be 1000 characters or less.");
-            }
-
-            // Validate JavaScript Code (optional but check if provided)
-            if (!string.IsNullOrWhiteSpace(data.JavaScriptCode))
-            {
-                if (data.JavaScriptCode.Length > 500000) // 500KB of code
-                {
-                    result.AddError("JavaScriptCode", "JavaScript code is too large (max 500KB).");
-                }
-
-                // Basic security check for dangerous patterns
-                if (ContainsDangerousCode(data.JavaScriptCode))
-                {
-                    result.AddError("JavaScriptCode", "Code contains potentially dangerous patterns.");
-                }
             }
 
             // Validate Thumbnail URL (optional)
@@ -473,7 +346,6 @@ namespace BucStop.Controllers
             public string Author { get; set; }
             public string Description { get; set; }
             public string HowToPlay { get; set; }
-            public string JavaScriptCode { get; set; }
             public string ThumbnailUrl { get; set; }
         }
 
