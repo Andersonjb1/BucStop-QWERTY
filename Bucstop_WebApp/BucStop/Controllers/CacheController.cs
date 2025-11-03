@@ -45,7 +45,7 @@ namespace BucStop.Controllers
     private static readonly HashSet<string> AllowedServices = new() { "snake", "pong", "tetris" };
 
     // Constructor - dependencies injected by DI
-    public AssetsCacheController(IHttpClientFactory httpFactory, IMemoryCache cache)
+    public CacheController(IHttpClientFactory httpFactory, IMemoryCache cache)
     {
       _httpFactory = httpFactory;
       _cache = cache;
