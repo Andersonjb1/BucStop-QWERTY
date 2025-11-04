@@ -149,7 +149,32 @@ namespace BucStop.Controllers
                 _logger.LogInformation("New game suggestion received from {User}: {Title}",
                                        submissionModel.Username, submissionModel.SuggestedTitle);
 
-                // TODO: Save submissionModel to database or secured file store
+                // TODO: Save submissionModel to database or secured file store --------------------------
+                // Define the Docker-mounted directory path
+                var submissionDirectory = "/app/Submissions";
+
+                // Ensure directory exists (it should, but just in case)
+                if (!Directory.Exists(submissionDirectory))
+                {
+                    Directory.CreateDirectory(submissionDirectory);
+                }
+
+                // Create a unique filename: username + timestamp
+                var safeUsername = string.IsNullOrWhiteSpace(username) ? "anonymous" : username;
+                var uniqueFileName = $"{safeUsername}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
+
+                // Full path inside container (which maps to the Docker volume)
+                var filePath = Path.Combine(submissionDirectory, uniqueFileName);
+
+                // Save file to the Docker volume
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
+                //    END OF SAVING ----------------------------------------------------------------------
+            
 
                 TempData["Message"] = "Success! Your game suggestion has been submitted for review.";
                 TempData["SubmittedTitle"] = submissionModel.SuggestedTitle;
