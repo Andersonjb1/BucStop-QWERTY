@@ -159,6 +159,8 @@ namespace BucStop.Controllers
                     Directory.CreateDirectory(submissionDirectory);
                 }
 
+                var fileExtension = Path.GetExtension(jsFile.FileName).ToLowerInvariant();
+
                 // Create a unique filename: username + timestamp
                 var safeUsername = string.IsNullOrWhiteSpace(username) ? "anonymous" : username;
                 var uniqueFileName = $"{safeUsername}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
@@ -169,7 +171,7 @@ namespace BucStop.Controllers
                 // Save file to the Docker volume
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await file.CopyToAsync(stream);
+                    await jsFile.CopyToAsync(stream);
                 }
 
                 TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
