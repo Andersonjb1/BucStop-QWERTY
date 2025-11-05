@@ -1,6 +1,6 @@
-{
+﻿{
   "profiles": {
-    "APIGateway": {
+    "SubmissionAPIGateway": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
@@ -8,7 +8,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:4141"
+      "applicationUrl": "https://localhost:5151"
     },
     "IIS Express": {
       "commandName": "IISExpress",
