@@ -81,7 +81,7 @@ services:
     networks:
       - bucstop-network
     environment:
-      - DOTNET_ENVIRONMENT=${env:-containersLocal}
+      - DOTNET_ENVIRONMENT=${env:-containers}
     volumes:
       - submission-data:/app/Submissions
 
