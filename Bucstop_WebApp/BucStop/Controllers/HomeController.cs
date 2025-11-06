@@ -1,6 +1,7 @@
 ﻿using BucStop.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 
 /*
  * This file has the controllers for everything outside of the games
@@ -27,6 +28,7 @@ namespace BucStop.Controllers
         }
 
         //Takes the user to the admin page.
+        [Authorize]
         public IActionResult Admin()
         {
             _logger.LogInformation("{Category}: {User} visited the Admin page.", "UserActivity", User.Identity?.Name ?? "Anonymous");
