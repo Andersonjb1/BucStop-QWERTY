@@ -13,30 +13,26 @@ let dpr = window.devicePixelRatio || 1;
 
 // Resize canvas to match CONTAINER, not screen.
 function sizeCanvas() {
-  const parent = canvas.parentElement;
-  const cssW = parent.clientWidth;
-  const cssH = parent.clientHeight;
+  // Fixed, non-responsive canvas size (matches Snake & Tetris constraint style)
+  canvas.width = 400;
+  canvas.height = 400;
 
-  dpr = window.devicePixelRatio || 1;
+  canvas.style.width = canvas.width + 'px';
+  canvas.style.height = canvas.height + 'px';
 
-  canvas.style.width = cssW + 'px';
-  canvas.style.height = cssH + 'px';
-  canvas.width = Math.floor(cssW * dpr);
-  canvas.height = Math.floor(cssH * dpr);
-
-  context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  context.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 // Helpers for readable code
-function canvasWidth() { return canvas.width / dpr; }
-function canvasHeight() { return canvas.height / dpr; }
+function canvasWidth() { return canvas.width; }
+function canvasHeight() { return canvas.height; }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 // Game variables
 const grid = 15;
 const paddleWidth = grid * 5;
-let paddleSpeed = 8;
-let ballSpeed = 5;
+let paddleSpeed = 10;
+let ballSpeed = 8;
 
 let playerScore = 0;
 let computerScore = 0;
@@ -85,7 +81,7 @@ function addSpin(paddle) {
 }
 
 // AI logic (adaptive, slightly human-like)
-const aiPaddleBaseSpeed = 4;
+const aiPaddleBaseSpeed = 6;
 let aiLagTimer = 0;
 let targetOffset = 0;
 
@@ -214,10 +210,6 @@ function requestStart() {
   resetGame();
   loop();
 }
-
-// Resize
-window.addEventListener('resize', () => { sizeCanvas(); if (running) resetGame(); else showStartScreen(); });
-window.addEventListener('orientationchange', () => { sizeCanvas(); if (running) resetGame(); else showStartScreen(); });
 
 // Init
 sizeCanvas();
