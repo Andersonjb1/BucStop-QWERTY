@@ -64,10 +64,6 @@ namespace BucStop.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(string description)
         {
-            if (SUBMISSIONS_UNDER_MAINTENANCE)
-            return View("Maintenance"); // stops the POST while under maintenance
-
-
             var snapshot = new Snapshot
             {
                 Timestamp = DateTime.UtcNow,
