@@ -43,9 +43,8 @@ namespace BucStop.Controllers
         //Takes the user to the game criteria page.
         public IActionResult GameCriteria()
         {
-            return Content("MAINT TEST"); // temporary
-            //_logger.LogInformation("{Category}: {User} visited the Game Criteria page.", "UserActivity", User.Identity?.Name ?? "Anonymous");
-            //return View();
+            _logger.LogInformation("{Category}: {User} visited the Game Criteria page.", "UserActivity", User.Identity?.Name ?? "Anonymous");
+            return View();
         }
 
         //Takes the user to version 2.1 page
