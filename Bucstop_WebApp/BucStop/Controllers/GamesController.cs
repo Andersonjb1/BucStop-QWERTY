@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 
 
+
 /*
  * This file handles the links to each of the game pages.
  */
@@ -159,23 +160,47 @@ namespace BucStop.Controllers
                     Directory.CreateDirectory(submissionDirectory);
                 }
 
+                // Source - https://stackoverflow.com/questions/16921652/how-to-write-a-json-file-in-c
+                // Posted by Liam
+                // Retrieved 2025-11-05, License - CC BY-SA 4.0
+
+                List<string> _data = new List<string>();
+                _data.Add(new string()
+                {
+                    Username = submissionModel.Username,
+                    Title = submissionModel.SuggestedTitle,
+                    Author = submissionModel.SuggestedAuthor,
+                    Description = submissionModel.SuggestedDescription,
+                    HowTo = submissionModel.SuggestedHowTo,
+                    ThumbnailUrl = submissionModel.SuggestedThumbnailUrl
+                });
+
+                // 
+
+
                 var fileExtension = Path.GetExtension(jsFile.FileName).ToLowerInvariant();
 
                 // Create a unique filename: username + timestamp
-                // \var safeUsername = string.IsNullOrWhiteSpace(username) ? "anonymous" : username;
                 var uniqueFileName = $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
+                var uniqueJsonName = $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
                 var uniqueFolderName = Path.Combine(submissionDirectory, $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}");
 
                 // Create a unique folder for each submission
                 Directory.CreateDirectory(uniqueFolderName);
 
                 // Full path inside container (which maps to the Docker volume)
-                var filePath = Path.Combine(submissionDirectory, uniqueFileName);
+                var filePath = Path.Combine(uniqueFolderName, uniqueFileName);
+                var jsonPath = Path.Combine(uniqueFolderName, uniqueJsonName);
+
+                // currently throws an issue in docker wahoooooooooo
+                await using FileStream createStream = File.Create(jsonPath);
+                await JsonSerializer.SerializeAsync(createStream, _data);
 
                 // Save file to the Docker volume
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await jsFile.CopyToAsync(stream);
+
                 }
 
                 TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
