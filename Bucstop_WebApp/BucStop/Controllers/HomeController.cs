@@ -55,7 +55,7 @@ namespace BucStop.Controllers
 
         public IActionResult Maintenance()
         {
-            return View();
+            return View(Maintenance);
         }
 
         //Takes the user to version 2.1 page
