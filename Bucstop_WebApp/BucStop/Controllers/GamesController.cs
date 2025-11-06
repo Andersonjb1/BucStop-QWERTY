@@ -159,24 +159,9 @@ namespace BucStop.Controllers
                 {
                     Directory.CreateDirectory(submissionDirectory);
                 }
-
-                // Source - https://stackoverflow.com/questions/16921652/how-to-write-a-json-file-in-c
-                // Posted by Liam
-                // Retrieved 2025-11-05, License - CC BY-SA 4.0
-
-                List<string> _data = new List<string>();
-                _data.Add(new string()
-                {
-                    Username = submissionModel.Username,
-                    Title = submissionModel.SuggestedTitle,
-                    Author = submissionModel.SuggestedAuthor,
-                    Description = submissionModel.SuggestedDescription,
-                    HowTo = submissionModel.SuggestedHowTo,
-                    ThumbnailUrl = submissionModel.SuggestedThumbnailUrl
-                });
-
-                // 
-
+                
+                // Uses the same submission model structure for JSON storage
+                var data = new List<GameSubmissionModel> { submissionModel };
 
                 var fileExtension = Path.GetExtension(jsFile.FileName).ToLowerInvariant();
 
@@ -192,9 +177,9 @@ namespace BucStop.Controllers
                 var filePath = Path.Combine(uniqueFolderName, uniqueFileName);
                 var jsonPath = Path.Combine(uniqueFolderName, uniqueJsonName);
 
-                // currently throws an issue in docker wahoooooooooo
-                await using FileStream createStream = File.Create(jsonPath);
-                await JsonSerializer.SerializeAsync(createStream, _data);
+                // creates and writes the JSON file
+                await using var createStream = System.IO.File.Create(jsonPath);
+                await JsonSerializer.SerializeAsync(createStream, data, new JsonSerializerOptions { WriteIndented = true });
 
                 // Save file to the Docker volume
                 using (var stream = new FileStream(filePath, FileMode.Create))
