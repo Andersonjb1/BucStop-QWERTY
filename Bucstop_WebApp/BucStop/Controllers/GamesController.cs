@@ -163,7 +163,7 @@ namespace BucStop.Controllers
 
                 // Create a unique filename: username + timestamp
                 // \var safeUsername = string.IsNullOrWhiteSpace(username) ? "anonymous" : username;
-                var uniqueFileName = $"{safeUsername}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
+                var uniqueFileName = $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
 
                 // Full path inside container (which maps to the Docker volume)
                 var filePath = Path.Combine(submissionDirectory, uniqueFileName);
