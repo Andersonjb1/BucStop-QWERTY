@@ -1,5 +1,6 @@
 ﻿using BucStop.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 
 /*
@@ -46,9 +47,14 @@ namespace BucStop.Controllers
         public IActionResult GameCriteria()
         {
             if (SUBMISSIONS_UNDER_MAINTENANCE)
-                return View("Maintenance"); // shows the maintenance page
+                return Maintenance(); // shows the maintenance page
 
             _logger.LogInformation("{Category}: {User} visited the Game Criteria page.", "UserActivity", User.Identity?.Name ?? "Anonymous");
+            return View();
+        }
+
+        public IActionResult Maintenance()
+        {
             return View();
         }
 
