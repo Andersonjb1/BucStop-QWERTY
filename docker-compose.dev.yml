@@ -19,6 +19,7 @@ services:
     volumes:
       - snapshots-data:/app/Snapshots
       - logs-data:/app/Logs
+      - submission-data:/app/Submissions
 
   api-gateway:
     build:
