@@ -88,6 +88,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Uncomment these lines to enable authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
