@@ -48,7 +48,21 @@
                         </li>
 
                     </ul>
-                    <partial name="_LoginPartial"></partial>
+                    @{
+                        var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
+                        var act = (ViewContext.RouteData.Values["action"]?.ToString() ?? "").ToLower();
+                        var isAdminPage = ctrl == "home" && act == "admin";
+                    }
+
+                    @if (isAdminPage && (User.Identity?.IsAuthenticated ?? false))
+                        {
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                            <button type="submit" class="btn btn-link nav-link">Log out</button>
+                            </form>
+                        }
+
+                    <!-- This partial view handles login/logout functionality -->
+                    <!-- <partial name="_LoginPartial"></partial> -->
                 </div>
             </div>
         </nav>
