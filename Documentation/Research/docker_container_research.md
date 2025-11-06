@@ -131,7 +131,7 @@ By default, Docker Compose creates a network where services can reach each other
    - The WebApp retrieves JS game files from API Gateway URLs like:
      - `http://localhost:8082/js/snake.js`
      - `http://localhost:8083/js/pong.js`
-     - `http://localhost:8084/js/tetris.js`
+     - `http://game-tetris/js/tetris.js`
 
 3. **Deploy to AWS**
    - Push GitHub to AWS server.

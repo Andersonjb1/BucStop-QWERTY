@@ -1,1 +1,0 @@
-Microservice to handle the submission of JS games to the BucStop WebApp.

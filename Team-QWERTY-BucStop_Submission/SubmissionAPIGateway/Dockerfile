@@ -7,17 +7,17 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
 # Fix: Use correct relative path for the .csproj file
-COPY ["APIGateway.csproj", "./"]
+COPY ["SubmissionAPIGateway.csproj", "./"]
 
-RUN dotnet restore "APIGateway.csproj"
+RUN dotnet restore "SubmissionAPIGateway.csproj"
 COPY . .
 WORKDIR "/src"
-RUN dotnet build "APIGateway.csproj" -c Release -o /app/build
+RUN dotnet build "SubmissionAPIGateway.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "APIGateway.csproj" -c Release -o /app/publish
+RUN dotnet publish "SubmissionAPIGateway.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "APIGateway.dll"]
+ENTRYPOINT ["dotnet", "SubmissionAPIGateway.dll"]
