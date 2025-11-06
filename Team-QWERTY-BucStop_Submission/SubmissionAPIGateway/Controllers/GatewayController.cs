@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using Gateway;
-using System.ComponentModel.Design;
 
 // TESTING DEPLOY ACTION
 
@@ -34,7 +33,7 @@ namespace Gateway
         {
             try
             {
-                var gameKeys = new[] { "snake", "tetris", "pong" };
+                var gameKeys = new[] { "Snake", "Tetris", "Pong" };
 
                 var fetchTasks = new List<Task>();
                 foreach (var game in gameKeys)
@@ -43,7 +42,7 @@ namespace Gateway
 
                     if (_host.IsDevelopment())
                     {
-                        internalUrl = _config[$"Microservices:{game}"];
+                        internalUrl = _config[$"PublicUrls:{game}"];
                         _logger.LogInformation($"Using Development URL for {game}: {internalUrl}");
                     }
                     else
@@ -52,10 +51,10 @@ namespace Gateway
                         _logger.LogInformation($"Using Container URL for {game}: {internalUrl}");
                     }
 
-                    string publicUrl = _config[$"PublicUrls:{game}"];
-                    string jsPath = $"/js/{game.ToLowerInvariant()}.js";
+                    var publicUrl = _config[$"PublicUrls:{game}"];
+                    var jsPath = $"/js/{game.ToLowerInvariant()}.js";
 
-                    fetchTasks.Add(FetchGameInfo(internalUrl, $"/{game}"));
+                    fetchTasks.Add(FetchGameInfo(internalUrl, $"/{game}", publicUrl + jsPath));
                 }
 
                 await Task.WhenAll(fetchTasks);
@@ -69,31 +68,21 @@ namespace Gateway
         }
 
         [ApiExplorerSettings(IgnoreApi = true)]
-        private async Task FetchGameInfo(string internalUrl, string endpoint)
+        private async Task FetchGameInfo(string internalUrl, string endpoint, string publicJsUrl)
         {
             try
             {
-                using var client = new HttpClient { BaseAddress = new Uri(_config[$"Microservices:Gateway"]) };
-
-                _logger.LogInformation($"Using BaseAddress: {client.BaseAddress} and Requesting {internalUrl + endpoint}");
-
-                var response = await client.GetAsync(internalUrl + endpoint);
+                using var client = new HttpClient { BaseAddress = new Uri(internalUrl) };
+                var response = await client.GetAsync(endpoint);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var gameInfoList = await response.Content.ReadFromJsonAsync<List<GameInfo>>();
-
-                    _logger.LogInformation($"Game Info: {System.Text.Json.JsonSerializer.Serialize(gameInfoList)}");
-
                     if (gameInfoList != null)
                     {
                         foreach (var game in gameInfoList)
                         {
-                            string gameTitle = game.Title.ToLowerInvariant();
-                            string service = $"game-{gameTitle}";
-
-                            game.Content = $"/cache/{service}/js/{gameTitle}.js";
-                            game.Thumbnail = $"/cache/{service}/images/{gameTitle}.jpg";
+                            game.Content = publicJsUrl;
                         }
 
                         lock (_gameInfos)

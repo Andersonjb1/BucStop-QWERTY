@@ -47,6 +47,11 @@ builder.Services.AddHttpClient<MicroClient>(client =>
     client.BaseAddress = baseAddress;
 });
 
+{
+    // new: register in-memory cache
+    builder.Services.AddMemoryCache();
+}
+
 
 builder.Services.AddAuthentication("CustomAuthenticationScheme").AddCookie("CustomAuthenticationScheme", options =>
 {
