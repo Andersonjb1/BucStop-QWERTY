@@ -14,8 +14,6 @@ namespace BucStop.Controllers
 {
     public class SnapshotsController : Controller
     {
-        private const bool SUBMISSIONS_UNDER_MAINTENANCE = true; // flip to false to re-enable
-
         private readonly SnapshotService _snapshotService;
         private readonly PlayCountManager _playCountManager;
         private readonly MicroClient _httpClient;
@@ -59,8 +57,6 @@ namespace BucStop.Controllers
 
         public IActionResult Create()
         {
-            if (SUBMISSIONS_UNDER_MAINTENANCE)
-                return View("Maintenance"); // shows the maintenance page
 
             return View();
         }
