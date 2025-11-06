@@ -1,268 +1,225 @@
-/* 
- * Ping-Pong Fever!
- * 
+/*
+ * Ping-Pong Fever! (Extended + Mobile)
  * Base game created by straker on GitHub
- *  https://gist.github.com/straker/81b59eecf70da93af396f963596dfdc5
- * 
- * Extended by Chris Seals and Jacob Klucher
- * 
- * Fall 2023, ETSU
+ * Extended by Chris Seals, Jacob Klucher.
+ * Later edited by ChatGPT and Joe Neglia.
+ * Mobile/responsive & container-fit pass by ChatGPT.
  */
 
 const canvas = document.getElementById('game');
 const context = canvas.getContext('2d');
-const grid = 15; // Standard size used by most elements. Also provides offset to prevent elements from going off the left side.
-const paddleWidth = grid * 5; // 75 normally
-const maxPaddleX = canvas.width - grid - paddleWidth; // The furthest that a paddle can move to the right
 
-var paddleSpeed = 6; // Speed that the paddle moves per tick
-var ballSpeed = 6; // Speed that the ball moves per tick
-var playerScore = 0;
-var computerScore = 0;
-var resetting = false;
+let dpr = window.devicePixelRatio || 1;
 
-// Struct which holds the data for the top paddle (the computer)
-const topPaddle = {
-    // start in the middle of the game on the top side
-    // X and y position of this object is the top left point
-    y: grid * 2,
-    x: canvas.width / 2 - paddleWidth / 2,
-    height: grid,
-    width: paddleWidth,
+// Resize canvas to match CONTAINER, not screen.
+function sizeCanvas() {
+  const parent = canvas.parentElement;
+  const cssW = parent.clientWidth;
+  const cssH = parent.clientHeight;
 
-    // paddle velocity
-    dy: 0
-};
+  dpr = window.devicePixelRatio || 1;
 
-// Struct which holds data for the bottom paddle (the user)
-const bottomPaddle = {
-    // start in the middle of the game on the bottom side
-    // X and y position of this object is the top left point
-    y: canvas.height - grid * 3,
-    x: canvas.width / 2 - paddleWidth / 2,
-    height: grid,
-    width: paddleWidth,
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.width = Math.floor(cssW * dpr);
+  canvas.height = Math.floor(cssH * dpr);
 
-    // paddle velocity
-    dy: 0
-};
-
-// Struct which holds the data for the ball
-const ball = {
-    // start in the middle of the game
-    // X and y position of the ball is the top left corner
-    x: canvas.width / 2 - grid / 2, // Adjust for grid size
-    y: canvas.height / 2 - grid / 2, // Adjust for grid size
-    width: grid,
-    height: grid,
-
-    // keep track of when need to reset the ball position
-    resetting: false,
-
-    // ball velocity (start going to the top-right corner)
-    dy: ballSpeed,
-    dx: -ballSpeed
-};
-
-// check for collision between two objects using axis-aligned bounding box (AABB)
-// @see https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
-function collides(obj1, obj2) {
-    return obj1.x < obj2.x + obj2.width &&
-        obj1.x + obj1.width > obj2.x &&
-        obj1.y < obj2.y + obj2.height &&
-        obj1.y + obj1.height > obj2.y;
+  context.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-// Add an AI-controlled paddle
-const aiPaddleSpeed = 2; // Adjust the AI paddle speed as needed
+// Helpers for readable code
+function canvasWidth() { return canvas.width / dpr; }
+function canvasHeight() { return canvas.height / dpr; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-// Function to control the AI paddle
+// Game variables
+const grid = 15;
+const paddleWidth = grid * 5;
+let paddleSpeed = 8;
+let ballSpeed = 5;
+
+let playerScore = 0;
+let computerScore = 0;
+let resetting = false;
+let running = false;
+let loopId = null;
+
+// Objects
+const topPaddle = { x: 0, y: grid * 2, width: paddleWidth, height: grid, dx: 0 };
+const bottomPaddle = { x: 0, y: 0, width: paddleWidth, height: grid, dx: 0 };
+const ball = { x: 0, y: 0, width: grid, height: grid, dx: 0, dy: 0 };
+
+// Utility
+function randSign() { return Math.random() < 0.5 ? -1 : 1; }
+function randBetween(min, max) { return min + Math.random() * (max - min); }
+
+function randomLaunch(speed) {
+  const angle = randBetween(25, 45) * Math.PI / 180;
+  return {
+    dx: Math.cos(angle) * speed * randSign(),
+    dy: Math.sin(angle) * speed * randSign()
+  };
+}
+
+function collides(a, b) {
+  return a.x < b.x + b.width &&
+         a.x + a.width > b.x &&
+         a.y < b.y + b.height &&
+         a.y + a.height > b.y;
+}
+
+// Spin effect for depth
+function addSpin(paddle) {
+  const ballCenter = ball.x + ball.width / 2;
+  const paddleCenter = paddle.x + paddle.width / 2;
+  const offset = (ballCenter - paddleCenter) / (paddle.width / 2);
+  ball.dx += offset * 2;
+
+  const maxSpeed = 11;
+  const speed = Math.hypot(ball.dx, ball.dy);
+  if (speed > maxSpeed) {
+    const k = maxSpeed / speed;
+    ball.dx *= k;
+    ball.dy *= k;
+  }
+}
+
+// AI logic (adaptive, slightly human-like)
+const aiPaddleBaseSpeed = 4;
+let aiLagTimer = 0;
+let targetOffset = 0;
+
 function controlAIPaddle() {
-    // Calculate the AI paddle's target position based on the ball's position
-    const targetX = ball.x - topPaddle.width / 2;
+  const interested = ball.dy < 0;
 
-    // Calculate the difference between the current position and the target position
-    const dx = targetX - topPaddle.x;
+  if (aiLagTimer > 0) aiLagTimer--;
+  else {
+    aiLagTimer = Math.floor(randBetween(3, 7));
+    if (interested) targetOffset = randBetween(-14, 14);
+  }
 
-    // Limit the AI paddle's maximum speed
-    const aiPaddleVelocity = Math.min(aiPaddleSpeed, Math.abs(dx));
+  const targetX = (interested
+    ? ball.x + ball.width / 2 + targetOffset
+    : canvasWidth() / 2) - topPaddle.width / 2;
 
-    // Move the AI paddle towards the target position
-    if (dx > 0) {
-        topPaddle.dy = aiPaddleVelocity;
-    } else {
-        topPaddle.dy = -aiPaddleVelocity;
-    }
+  const dx = targetX - topPaddle.x;
+
+  if (Math.abs(dx) > 5)
+    topPaddle.dx = Math.sign(dx) * Math.min(Math.abs(dx), aiPaddleBaseSpeed);
+  else
+    topPaddle.dx = 0;
 }
 
-// Function to reset the game
+function maxPaddleX() { return canvasWidth() - grid - paddleWidth; }
+
+// Reset positions
 function resetGame() {
-    // Reset the ball and paddle positions
-    ball.x = canvas.width / 2 - grid / 2; // Adjust for grid size
-    ball.y = canvas.height / 2 - grid / 2; // Adjust for grid size
-    // Recenter the two paddles
-    topPaddle.x = canvas.width / 2 - paddleWidth / 2;
-    bottomPaddle.x = canvas.width / 2 - paddleWidth / 2;
+  ball.x = canvasWidth() / 2 - grid / 2;
+  ball.y = canvasHeight() / 2 - grid / 2;
 
-    // Reset the ball's velocity
-    ball.dy = ballSpeed;
-    ball.dx = -ballSpeed;
-    resetting = false;
+  const v = randomLaunch(ballSpeed + randBetween(-1, 1.5));
+  ball.dx = v.dx;
+  ball.dy = v.dy;
+
+  topPaddle.x = canvasWidth() / 2 - paddleWidth / 2;
+  bottomPaddle.x = canvasWidth() / 2 - paddleWidth / 2;
+  bottomPaddle.y = canvasHeight() - grid * 3;
+
+  resetting = false;
 }
 
-// Function to end the game
 function endGame() {
-    resetting = true;
-    // Clear the canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    // Display the winner
-    const winner = playerScore === 7 ? "Player" : "Computer";
-    context.font = '36px Arial';
-    context.fillText(`${ winner } wins!`, canvas.width / 2, canvas.height / 2);
-    
-    // Stop the game loop
-    cancelAnimationFrame(loop);
+  running = false;
+  cancelAnimationFrame(loopId);
+
+  context.clearRect(0, 0, canvasWidth(), canvasHeight());
+  context.textAlign = 'center';
+  context.font = '36px Arial';
+  context.fillText(`${playerScore === 7 ? "Player" : "Computer"} wins!`, canvasWidth()/2, canvasHeight()/2);
+  context.font = '22px Arial';
+  context.fillText('Press Space or Tap to Restart', canvasWidth()/2, canvasHeight()/2 + 40);
 }
 
 function showStartScreen() {
-    context.font = '36px Arial';
-    context.textAlign = 'center';
-    context.fillText('Press space to start', canvas.width / 2, canvas.height / 2);
+  context.textAlign = 'center';
+  context.font = '32px Arial';
+  context.fillText('Press Space or Tap to Start', canvasWidth()/2, canvasHeight()/2);
 }
 
-// game loop
+// Game Loop
 function loop() {
-    
-    requestAnimationFrame(loop);
-    context.clearRect(0, 0, canvas.width, canvas.height);
+  loopId = requestAnimationFrame(loop);
 
-    // Control the AI paddle
-    controlAIPaddle();
+  context.clearRect(0, 0, canvasWidth(), canvasHeight());
+  controlAIPaddle();
 
-    // move paddles by their velocity
-    topPaddle.x += topPaddle.dy;
-    bottomPaddle.x += bottomPaddle.dy;
+  topPaddle.x = clamp(topPaddle.x + topPaddle.dx, grid, maxPaddleX());
+  bottomPaddle.x = clamp(bottomPaddle.x + bottomPaddle.dx, grid, maxPaddleX());
 
-    // prevent paddles from going through walls
-    if (topPaddle.x < grid) {
-        topPaddle.x = grid;
-    }
-    else if (topPaddle.x > maxPaddleX) {
-        topPaddle.x = maxPaddleX;
-    }
+  context.fillRect(topPaddle.x, topPaddle.y, paddleWidth, grid);
+  context.fillRect(bottomPaddle.x, bottomPaddle.y, paddleWidth, grid);
 
-    if (bottomPaddle.x < grid) {
-        bottomPaddle.x = grid;
-    }
-    else if (bottomPaddle.x > maxPaddleX) {
-        bottomPaddle.x = maxPaddleX;
-    }
+  ball.x += ball.dx;
+  ball.y += ball.dy;
 
-    // draw paddles
-    context.fillStyle = 'black';
-    context.fillRect(topPaddle.x, topPaddle.y, topPaddle.width, topPaddle.height);
-    context.fillRect(bottomPaddle.x, bottomPaddle.y, bottomPaddle.width, bottomPaddle.height);
+  if (ball.x < grid || ball.x + grid > canvasWidth() - grid) ball.dx *= -1;
 
-    // move ball by its velocity
-    ball.x += ball.dx;
-    ball.y += ball.dy;
+  if (ball.y > canvasHeight() && !resetting) {
+    computerScore++;
+    return computerScore === 7 ? endGame() : (resetting = true, setTimeout(resetGame, 700));
+  }
+  if (ball.y < 0 && !resetting) {
+    playerScore++;
+    return playerScore === 7 ? endGame() : (resetting = true, setTimeout(resetGame, 700));
+  }
 
-    // prevent ball from going through walls by changing its velocity
-    if (ball.x < grid) {
-        ball.x = grid;
-        ball.dx *= -1;
-    }
-    else if (ball.x + grid > canvas.width - grid) {
-        ball.x = canvas.width - grid * 2;
-        ball.dx *= -1;
-    }
+  if (collides(ball, topPaddle)) { ball.dy = Math.abs(ball.dy); addSpin(topPaddle); }
+  if (collides(ball, bottomPaddle)) { ball.dy = -Math.abs(ball.dy); addSpin(bottomPaddle); }
 
-    // reset ball if computer scores
-    if ((ball.y > canvas.height) && !resetting) {
-        computerScore++;
-        if (computerScore !== 7)
-        {
-            resetting = true;
-            setTimeout(function () {
-                resetGame();
-            }, 1000);
-        }
-    }
-    // reset ball if player scores
-    if (ball.y < 0 && !resetting) {
-        playerScore++;
-        if (playerScore !== 7) {
-            resetting = true;
-            setTimeout(function () {
-                resetGame();
-            }, 1000);
-        }
-    }
+  context.fillRect(ball.x, ball.y, grid, grid);
 
-    // Display the scores
-    context.font = '24px Arial';
-    context.fillText(`Player: ${ playerScore }`, canvas.width - 325, 30);
-    context.fillText(`Computer: ${ computerScore }`, canvas.width - 100, 30);
-
-    // End the game if either player or computer reaches 7 points
-    if (playerScore === 7 || computerScore === 7) {
-        endGame();
-    }
-
-    // check to see if ball collides with paddle. if they do change y velocity
-    if (collides(ball, topPaddle)) {
-        ball.dy *= -1;
-
-        // move ball next to the paddle otherwise the collision will happen again
-        // in the next frame
-        ball.y = topPaddle.y + topPaddle.height;
-    }
-    else if (collides(ball, bottomPaddle)) {
-        ball.dy *= -1;
-
-        // move ball next to the paddle otherwise the collision will happen again
-        // in the next frame
-        ball.y = bottomPaddle.y - ball.height;
-    }
-
-    // draw ball
-    context.fillRect(ball.x, ball.y, ball.width, ball.height);
-
-    // draw walls
-    context.fillStyle = 'black';
-    context.fillRect(0, 0, grid, canvas.height);
-    context.fillRect(canvas.width - grid, 0, canvas.width, canvas.height);
-
-    
+  context.font = '24px Arial';
+  context.textAlign = 'left';
+  context.fillText(`Player: ${playerScore}`, 20, 30);
+  context.textAlign = 'right';
+  context.fillText(`Computer: ${computerScore}`, canvasWidth()-20, 30);
 }
 
-// listen to keyboard events to move the paddles
-document.addEventListener('keydown', function (e) {
-
-    //left arrow key
-    if (e.which === 37) {
-        bottomPaddle.dy = -paddleSpeed;
-    }
-
-    //right arrow key
-    else if (e.which === 39) {
-        bottomPaddle.dy = paddleSpeed;
-    }
+// Controls
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') bottomPaddle.dx = -paddleSpeed;
+  else if (e.key === 'ArrowRight') bottomPaddle.dx = paddleSpeed;
+  else if (e.code === 'Space') requestStart();
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') bottomPaddle.dx = 0;
 });
 
-// listen to keyboard events to stop the paddle if key is released
-document.addEventListener('keyup', function (e) {
-    if (e.which === 37 || e.which === 39) {
-        bottomPaddle.dy = 0;
-    }
-});
+// Touch support
+canvas.addEventListener('pointerdown', e => { requestStart(); movePaddle(e); dragging = true; });
+canvas.addEventListener('pointermove', e => dragging && movePaddle(e));
+canvas.addEventListener('pointerup', () => dragging = false);
 
-// start the game
-// when the player presses the spacebar, the loop begins
-document.body.onkeyup = function (e) {
-    if (e.keyCode == 32) {
-        requestAnimationFrame(loop);
-    }
+function movePaddle(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) - paddleWidth/2;
+  bottomPaddle.x = clamp(x, grid, maxPaddleX());
 }
 
+// Start Handler
+function requestStart() {
+  if (running) return;
+  if (playerScore === 7 || computerScore === 7) { playerScore = 0; computerScore = 0; }
+  running = true;
+  resetGame();
+  loop();
+}
+
+// Resize
+window.addEventListener('resize', () => { sizeCanvas(); if (running) resetGame(); else showStartScreen(); });
+window.addEventListener('orientationchange', () => { sizeCanvas(); if (running) resetGame(); else showStartScreen(); });
+
+// Init
+sizeCanvas();
+resetGame();
 showStartScreen();
