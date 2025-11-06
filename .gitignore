@@ -401,3 +401,5 @@ FodyWeavers.xsd
 
 # Shared Suggestions folder
 SharedSuggestions/
+
+.DS_Store
