@@ -1,6 +1,5 @@
 ﻿using BucStop.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 
 /*
@@ -12,8 +11,6 @@ namespace BucStop.Controllers
 {
     public class HomeController : Controller
     {
-        private const bool SUBMISSIONS_UNDER_MAINTENANCE = true; // flip to false to re-enable
-
         private readonly ILogger<HomeController> _logger;
         private readonly MicroClient _httpClient;
 
@@ -46,16 +43,8 @@ namespace BucStop.Controllers
         //Takes the user to the game criteria page.
         public IActionResult GameCriteria()
         {
-            if (SUBMISSIONS_UNDER_MAINTENANCE)
-                return Maintenance(); // shows the maintenance page
-
             _logger.LogInformation("{Category}: {User} visited the Game Criteria page.", "UserActivity", User.Identity?.Name ?? "Anonymous");
             return View();
-        }
-
-        public IActionResult Maintenance()
-        {
-            return View(Maintenance);
         }
 
         //Takes the user to version 2.1 page

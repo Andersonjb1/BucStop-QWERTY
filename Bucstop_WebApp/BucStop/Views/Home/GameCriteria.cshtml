@@ -1,323 +1,334 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Config
 @{
     ViewData["Title"] = "Game Suggestion Guide";
 }
-
-<h1>@ViewData["Title"]</h1>
-
-<p>
-    Welcome to BucStop! Have a great idea for a game you'd love to see on our site? 
-    Fill out the form below to share your game concept with us. 
-    This helps us understand what types of games our users want to play!
-</p>
-
-@if (TempData["Message"] != null)
-{
-    var isSuccess = TempData["Message"].ToString().StartsWith("Success");
-    <div class="alert @(isSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
-        <strong>@(isSuccess ? "✓" : "✗")</strong> @TempData["Message"]
-        @if (TempData["SubmittedTitle"] != null)
-        {
-            <br><small>Game Title: <em>@TempData["SubmittedTitle"]</em></small>
-        }
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+@{
+    bool GameSubmissionUnderMaintenance = true; // flip to false to re-enable
 }
 
-<hr>
+@if (GameSubmissionUnderMaintenance)
+{
+    @await Html.PartialAsync("~/Views/Snapshots/Maintenance.cshtml")
+}
+else
+{
+    <h1>@ViewData["Title"]</h1>
 
-<h2>Game Suggestion Requirements</h2>
+    <p>
+        Welcome to BucStop! Have a great idea for a game you'd love to see on our site? 
+        Fill out the form below to share your game concept with us. 
+        This helps us understand what types of games our users want to play!
+    </p>
 
-<p>Before submitting a suggestion, please make sure it follows our community standards:</p>
-
-<ul>
-    <li><strong>Game Name:</strong> Must be under 50 characters and free of offensive language.</li>
-    <li><strong>Author Name:</strong> Must be under 100 characters.</li>
-    <li><strong>Description:</strong> Between 20-1000 characters describing your game concept.</li>
-    <li><strong>How To Play:</strong> Clear instructions (up to 1000 characters).</li>
-    <li><strong>Content:</strong> Must not contain or promote offensive, violent, or illegal material.</li>
-    <li><strong>Concept:</strong> Should be creative, fun, and appropriate for a general audience.</li>
-    <li><strong>JavaScript File:</strong> Optional .js file with your game code (max 500KB).</li>
-</ul>
-
-<hr>
-
-<h2>Game Submission Form</h2>
-
-<form asp-controller="Games" asp-action="SubmitSuggestion" enctype="multipart/form-data" method="post" id="submissionForm">
-    
-    <div class="row">
-        <div class="col-md-6">
-            <div class="form-group mb-3">
-                <label for="username">Your Name (optional):</label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    name="username" 
-                    class="form-control" 
-                    placeholder="Anonymous" 
-                    maxlength="100" />
-            </div>
+    @if (TempData["Message"] != null)
+    {
+        var isSuccess = TempData["Message"].ToString().StartsWith("Success");
+        <div class="alert @(isSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+            <strong>@(isSuccess ? "✓" : "✗")</strong> @TempData["Message"]
+            @if (TempData["SubmittedTitle"] != null)
+            {
+                <br><small>Game Title: <em>@TempData["SubmittedTitle"]</em></small>
+            }
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    }
+
+    <hr>
+
+    <h2>Game Suggestion Requirements</h2>
+
+    <p>Before submitting a suggestion, please make sure it follows our community standards:</p>
+
+    <ul>
+        <li><strong>Game Name:</strong> Must be under 50 characters and free of offensive language.</li>
+        <li><strong>Author Name:</strong> Must be under 100 characters.</li>
+        <li><strong>Description:</strong> Between 20-1000 characters describing your game concept.</li>
+        <li><strong>How To Play:</strong> Clear instructions (up to 1000 characters).</li>
+        <li><strong>Content:</strong> Must not contain or promote offensive, violent, or illegal material.</li>
+        <li><strong>Concept:</strong> Should be creative, fun, and appropriate for a general audience.</li>
+        <li><strong>JavaScript File:</strong> Optional .js file with your game code (max 500KB).</li>
+    </ul>
+
+    <hr>
+
+    <h2>Game Submission Form</h2>
+
+    <form asp-controller="Games" asp-action="SubmitSuggestion" enctype="multipart/form-data" method="post" id="submissionForm">
         
-        <div class="col-md-6">
-            <div class="form-group mb-3">
-                <label for="title">Game Title: <span class="text-danger">*</span></label>
-                <input 
-                    type="text" 
-                    id="title" 
-                    name="title" 
-                    class="form-control" 
-                    placeholder="e.g., Space Dodge Adventure"
-                    maxlength="50"
-                    required />
-                <small class="form-text text-muted">Max 50 characters. <span id="titleCount">0/50</span></small>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="username">Your Name (optional):</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-control" 
+                        placeholder="Anonymous" 
+                        maxlength="100" />
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="title">Game Title: <span class="text-danger">*</span></label>
+                    <input 
+                        type="text" 
+                        id="title" 
+                        name="title" 
+                        class="form-control" 
+                        placeholder="e.g., Space Dodge Adventure"
+                        maxlength="50"
+                        required />
+                    <small class="form-text text-muted">Max 50 characters. <span id="titleCount">0/50</span></small>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="form-group mb-3">
-        <label for="author">Author Name: <span class="text-danger">*</span></label>
-        <input 
-            type="text" 
-            id="author" 
-            name="author" 
-            class="form-control" 
-            placeholder="Your name or alias"
-            maxlength="100"
-            required />
-        <small class="form-text text-muted">Max 100 characters. <span id="authorCount">0/100</span></small>
-    </div>
+        <div class="form-group mb-3">
+            <label for="author">Author Name: <span class="text-danger">*</span></label>
+            <input 
+                type="text" 
+                id="author" 
+                name="author" 
+                class="form-control" 
+                placeholder="Your name or alias"
+                maxlength="100"
+                required />
+            <small class="form-text text-muted">Max 100 characters. <span id="authorCount">0/100</span></small>
+        </div>
 
-    <div class="form-group mb-3">
-        <label for="description">Game Description: <span class="text-danger">*</span></label>
-        <textarea 
-            id="description" 
-            name="description" 
-            class="form-control" 
-            rows="4"
-            placeholder="Describe your game's theme, features, and what makes it unique..."
-            minlength="20"
-            maxlength="1000"
-            required></textarea>
-        <small class="form-text text-muted">20-1000 characters. <span id="descriptionCount">0/1000</span></small>
-    </div>
+        <div class="form-group mb-3">
+            <label for="description">Game Description: <span class="text-danger">*</span></label>
+            <textarea 
+                id="description" 
+                name="description" 
+                class="form-control" 
+                rows="4"
+                placeholder="Describe your game's theme, features, and what makes it unique..."
+                minlength="20"
+                maxlength="1000"
+                required></textarea>
+            <small class="form-text text-muted">20-1000 characters. <span id="descriptionCount">0/1000</span></small>
+        </div>
 
-    <div class="form-group mb-3">
-        <label for="howToPlay">How To Play: <span class="text-danger">*</span></label>
-        <textarea 
-            id="howToPlay" 
-            name="howToPlay" 
-            class="form-control" 
-            rows="4"
-            placeholder="Explain the controls, objectives, and game mechanics..."
-            maxlength="1000"
-            required></textarea>
-        <small class="form-text text-muted">Max 1000 characters. <span id="howToPlayCount">0/1000</span></small>
-    </div>
+        <div class="form-group mb-3">
+            <label for="howToPlay">How To Play: <span class="text-danger">*</span></label>
+            <textarea 
+                id="howToPlay" 
+                name="howToPlay" 
+                class="form-control" 
+                rows="4"
+                placeholder="Explain the controls, objectives, and game mechanics..."
+                maxlength="1000"
+                required></textarea>
+            <small class="form-text text-muted">Max 1000 characters. <span id="howToPlayCount">0/1000</span></small>
+        </div>
 
-    <div class="form-group mb-3">
-        <label for="thumbnailUrl">Thumbnail URL (optional):</label>
-        <input 
-            type="url" 
-            id="thumbnailUrl" 
-            name="thumbnailUrl" 
-            class="form-control" 
-            placeholder="https://example.com/thumbnail.png" />
-        <small class="form-text text-muted">Provide a URL to an image for your game thumbnail.</small>
-    </div>
+        <div class="form-group mb-3">
+            <label for="thumbnailUrl">Thumbnail URL (optional):</label>
+            <input 
+                type="url" 
+                id="thumbnailUrl" 
+                name="thumbnailUrl" 
+                class="form-control" 
+                placeholder="https://example.com/thumbnail.png" />
+            <small class="form-text text-muted">Provide a URL to an image for your game thumbnail.</small>
+        </div>
 
-    <div class="form-group mb-3">
-        <label for="jsFile">JavaScript Code File (optional):</label>
-        <input 
-            type="file" 
-            id="jsFile" 
-            name="jsFile" 
-            class="form-control" 
-            accept=".js" />
-        <small class="form-text text-muted">Upload a .js file with your game code (max 500KB). <span id="fileSize"></span></small>
-    </div>
+        <div class="form-group mb-3">
+            <label for="jsFile">JavaScript Code File (optional):</label>
+            <input 
+                type="file" 
+                id="jsFile" 
+                name="jsFile" 
+                class="form-control" 
+                accept=".js" />
+            <small class="form-text text-muted">Upload a .js file with your game code (max 500KB). <span id="fileSize"></span></small>
+        </div>
 
-    <div class="mb-3">
-        <button type="button" id="validateBtn" class="btn btn-info">
-            🔍 Validate Submission
-        </button>
-        <button type="submit" class="btn btn-success" id="submitBtn">
-            Submit Suggestion
-        </button>
-    </div>
+        <div class="mb-3">
+            <button type="button" id="validateBtn" class="btn btn-info">
+                🔍 Validate Submission
+            </button>
+            <button type="submit" class="btn btn-success" id="submitBtn">
+                Submit Suggestion
+            </button>
+        </div>
 
-    <div id="validationResults" class="alert" style="display: none;"></div>
-</form>
+        <div id="validationResults" class="alert" style="display: none;"></div>
+    </form>
 
-<hr>
+    <hr>
 
-<h2>Tips for a Great Submission</h2>
+    <h2>Tips for a Great Submission</h2>
 
-<ul>
-    <li>Be creative and original with your game concept</li>
-    <li>Provide clear, detailed instructions</li>
-    <li>If including code, make sure it's well-commented and organized</li>
-    <li>Test your JavaScript code before submitting</li>
-    <li>Avoid using external libraries that may not be available</li>
-</ul>
+    <ul>
+        <li>Be creative and original with your game concept</li>
+        <li>Provide clear, detailed instructions</li>
+        <li>If including code, make sure it's well-commented and organized</li>
+        <li>Test your JavaScript code before submitting</li>
+        <li>Avoid using external libraries that may not be available</li>
+    </ul>
 
-<p>
-    Thank you for helping shape the future of BucStop! 
-    We review all submissions and may reach out if your idea is selected for development.
-</p>
+    <p>
+        Thank you for helping shape the future of BucStop! 
+        We review all submissions and may reach out if your idea is selected for development.
+    </p>
 
-@section Scripts {
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('submissionForm');
-        const validateBtn = document.getElementById('validateBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        const validationResults = document.getElementById('validationResults');
-        const jsFileInput = document.getElementById('jsFile');
+    @section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('submissionForm');
+            const validateBtn = document.getElementById('validateBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const validationResults = document.getElementById('validationResults');
+            const jsFileInput = document.getElementById('jsFile');
 
-        // Character counters
-        setupCharacterCounter('title', 'titleCount', 50);
-        setupCharacterCounter('author', 'authorCount', 100);
-        setupCharacterCounter('description', 'descriptionCount', 1000);
-        setupCharacterCounter('howToPlay', 'howToPlayCount', 1000);
+            // Character counters
+            setupCharacterCounter('title', 'titleCount', 50);
+            setupCharacterCounter('author', 'authorCount', 100);
+            setupCharacterCounter('description', 'descriptionCount', 1000);
+            setupCharacterCounter('howToPlay', 'howToPlayCount', 1000);
 
-        function setupCharacterCounter(inputId, countId, maxLength) {
-            const input = document.getElementById(inputId);
-            const counter = document.getElementById(countId);
-            
-            input.addEventListener('input', function() {
-                const length = this.value.length;
-                counter.textContent = length + '/' + maxLength;
-                counter.className = length > maxLength * 0.9 ? 'text-warning' : '';
-            });
-        }
-
-        // File size indicator
-        jsFileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            const fileSizeSpan = document.getElementById('fileSize');
-            
-            if (file) {
-                const sizeKB = (file.size / 1024).toFixed(2);
-                const isTooBig = file.size > 500 * 1024;
-                fileSizeSpan.textContent = `(${sizeKB} KB)`;
-                fileSizeSpan.className = isTooBig ? 'text-danger' : 'text-success';
+            function setupCharacterCounter(inputId, countId, maxLength) {
+                const input = document.getElementById(inputId);
+                const counter = document.getElementById(countId);
                 
-                if (isTooBig) {
-                    fileSizeSpan.textContent += ' - File too large!';
-                }
-            } else {
-                fileSizeSpan.textContent = '';
-            }
-        });
-
-        // Validation function
-        validateBtn.addEventListener('click', async function() {
-            const formData = new FormData(form);
-
-            try {
-                validateBtn.disabled = true;
-                validateBtn.innerHTML = '⏳ Validating...';
-
-                const response = await fetch('@Url.Action("ValidateSuggestion", "Games")', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                input.addEventListener('input', function() {
+                    const length = this.value.length;
+                    counter.textContent = length + '/' + maxLength;
+                    counter.className = length > maxLength * 0.9 ? 'text-warning' : '';
                 });
+            }
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Server response:', errorText);
-                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-                }
-
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    const responseText = await response.text();
-                    console.error('Non-JSON response received:', responseText);
-                    throw new Error('Server did not return JSON. Check console for details.');
-                }
-
-                const result = await response.json();
-                console.log('Validation result:', result);
-
-                if (result.isValid) {
-                    showValidationResult(true, '✓ Your submission is valid and ready to submit!');
-                } else {
-                    let errorMsg = '✗ Validation failed:\n\n';
-                    for (const [field, message] of Object.entries(result.errors)) {
-                        errorMsg += `• ${field}: ${message}\n`;
+            // File size indicator
+            jsFileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                const fileSizeSpan = document.getElementById('fileSize');
+                
+                if (file) {
+                    const sizeKB = (file.size / 1024).toFixed(2);
+                    const isTooBig = file.size > 500 * 1024;
+                    fileSizeSpan.textContent = `(${sizeKB} KB)`;
+                    fileSizeSpan.className = isTooBig ? 'text-danger' : 'text-success';
+                    
+                    if (isTooBig) {
+                        fileSizeSpan.textContent += ' - File too large!';
                     }
-                    showValidationResult(false, errorMsg);
+                } else {
+                    fileSizeSpan.textContent = '';
                 }
-            } catch (error) {
-                console.error('Validation error:', error);
-                showValidationResult(false, 'Error validating submission: ' + error.message);
-            } finally {
-                validateBtn.disabled = false;
-                validateBtn.innerHTML = '🔍 Validate Submission';
+            });
+
+            // Validation function
+            validateBtn.addEventListener('click', async function() {
+                const formData = new FormData(form);
+
+                try {
+                    validateBtn.disabled = true;
+                    validateBtn.innerHTML = '⏳ Validating...';
+
+                    const response = await fetch('@Url.Action("ValidateSuggestion", "Games")', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Server response:', errorText);
+                        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                    }
+
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        const responseText = await response.text();
+                        console.error('Non-JSON response received:', responseText);
+                        throw new Error('Server did not return JSON. Check console for details.');
+                    }
+
+                    const result = await response.json();
+                    console.log('Validation result:', result);
+
+                    if (result.isValid) {
+                        showValidationResult(true, '✓ Your submission is valid and ready to submit!');
+                    } else {
+                        let errorMsg = '✗ Validation failed:\n\n';
+                        for (const [field, message] of Object.entries(result.errors)) {
+                            errorMsg += `• ${field}: ${message}\n`;
+                        }
+                        showValidationResult(false, errorMsg);
+                    }
+                } catch (error) {
+                    console.error('Validation error:', error);
+                    showValidationResult(false, 'Error validating submission: ' + error.message);
+                } finally {
+                    validateBtn.disabled = false;
+                    validateBtn.innerHTML = '🔍 Validate Submission';
+                }
+            });
+
+            function showValidationResult(isValid, message) {
+                validationResults.style.display = 'block';
+                validationResults.className = isValid ? 'alert alert-success' : 'alert alert-danger';
+                validationResults.style.whiteSpace = 'pre-line';
+                validationResults.textContent = message;
+                validationResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
+
+            // Client-side validation before form submission
+            form.addEventListener('submit', function(e) {
+                const title = document.getElementById('title').value;
+                const author = document.getElementById('author').value;
+                const description = document.getElementById('description').value;
+                const howToPlay = document.getElementById('howToPlay').value;
+                const jsFile = jsFileInput.files[0];
+
+                // Basic client-side checks
+                if (title.length > 50) {
+                    e.preventDefault();
+                    alert('Game title must be 50 characters or less.');
+                    return false;
+                }
+
+                if (author.length > 100) {
+                    e.preventDefault();
+                    alert('Author name must be 100 characters or less.');
+                    return false;
+                }
+
+                if (description.length < 20 || description.length > 1000) {
+                    e.preventDefault();
+                    alert('Description must be between 20 and 1000 characters.');
+                    return false;
+                }
+
+                if (howToPlay.length > 1000) {
+                    e.preventDefault();
+                    alert('How To Play must be 1000 characters or less.');
+                    return false;
+                }
+
+                if (jsFile && jsFile.size > 500 * 1024) {
+                    e.preventDefault();
+                    alert('JavaScript file must be less than 500KB.');
+                    return false;
+                }
+
+                if (jsFile && !jsFile.name.toLowerCase().endsWith('.js')) {
+                    e.preventDefault();
+                    alert('Please upload a .js file for JavaScript code.');
+                    return false;
+                }
+
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '⏳ Submitting...';
+            });
         });
-
-        function showValidationResult(isValid, message) {
-            validationResults.style.display = 'block';
-            validationResults.className = isValid ? 'alert alert-success' : 'alert alert-danger';
-            validationResults.style.whiteSpace = 'pre-line';
-            validationResults.textContent = message;
-            validationResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        // Client-side validation before form submission
-        form.addEventListener('submit', function(e) {
-            const title = document.getElementById('title').value;
-            const author = document.getElementById('author').value;
-            const description = document.getElementById('description').value;
-            const howToPlay = document.getElementById('howToPlay').value;
-            const jsFile = jsFileInput.files[0];
-
-            // Basic client-side checks
-            if (title.length > 50) {
-                e.preventDefault();
-                alert('Game title must be 50 characters or less.');
-                return false;
-            }
-
-            if (author.length > 100) {
-                e.preventDefault();
-                alert('Author name must be 100 characters or less.');
-                return false;
-            }
-
-            if (description.length < 20 || description.length > 1000) {
-                e.preventDefault();
-                alert('Description must be between 20 and 1000 characters.');
-                return false;
-            }
-
-            if (howToPlay.length > 1000) {
-                e.preventDefault();
-                alert('How To Play must be 1000 characters or less.');
-                return false;
-            }
-
-            if (jsFile && jsFile.size > 500 * 1024) {
-                e.preventDefault();
-                alert('JavaScript file must be less than 500KB.');
-                return false;
-            }
-
-            if (jsFile && !jsFile.name.toLowerCase().endsWith('.js')) {
-                e.preventDefault();
-                alert('Please upload a .js file for JavaScript code.');
-                return false;
-            }
-
-            // Show loading state
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ Submitting...';
-        });
-    });
-</script>
+    </script>
+    }
 }

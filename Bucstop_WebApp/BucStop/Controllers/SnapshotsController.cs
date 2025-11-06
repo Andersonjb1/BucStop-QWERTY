@@ -57,7 +57,6 @@ namespace BucStop.Controllers
 
         public IActionResult Create()
         {
-
             return View();
         }
 
