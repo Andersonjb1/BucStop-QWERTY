@@ -1,0 +1,11 @@
+[
+  {
+    "Username": "Kataruse",
+    "SuggestedTitle": "Space Invaders",
+    "SuggestedAuthor": "Nick Crump",
+    "SuggestedDescription": "A fun shooter clone",
+    "SuggestedHowTo": "Use arrow keys and spacebar.",
+    "SuggestedThumbnailUrl": "/images/spaceinvaders.png",
+    "RawJsCodeContent": "console.log('Hello Buckstop!');"
+  }
+]
