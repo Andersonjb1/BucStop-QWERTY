@@ -62,11 +62,11 @@ jobs:
 
     - name: Run Navigation Selenium Test
       run: |
-        python ./.automatedTests/v1_0_2_NavigationTest.py
+        python ./.automatedTests/v1_1_0_NavigationTest.py
 
     - name: Run Play Base Games Selenium Test
       run: |
-        python ./.automatedTests/v1_0_0_PlayBaseGamesTest.py
+        python ./.automatedTests/v1_1_0_PlayBaseGamesTest.py
 
     - name: Shutdown Containers
       if: always()

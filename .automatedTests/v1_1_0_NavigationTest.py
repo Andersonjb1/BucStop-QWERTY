@@ -6,9 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
-import time, hashlib
+import time
 
 # Chrome Options
 chrome_options = Options()
@@ -23,28 +21,6 @@ chrome_options.add_argument('--ignore-ssl-errors')
 
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-# Function to get a hash of the canvas content
-def get_canvas_hash(driver):
-    canvas = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.ID, "game"))
-    )
-    data_url = driver.execute_script("return arguments[0].toDataURL('image/png');", canvas)
-    return hashlib.md5(data_url.encode()).hexdigest()
-
-# Function to start the game and verify canvas updates
-def start_game_test():
-    actions = ActionChains(driver)
-    element = driver.find_element(By.ID, "game")
-
-    hash1 = get_canvas_hash(driver)
-
-    actions.click(element).key_down(Keys.SPACE).key_up(Keys.SPACE).perform()
-    time.sleep(1)
-
-    hash2 = get_canvas_hash(driver)
-
-    assert hash1 != hash2, "Canvas did not update — game might not have started."
-    print("Canvas updated successfully after SPACE key press.")
 
 try:
     # 1) Navigates to the localhosted server and ensures website it loaded properly.
@@ -58,45 +34,8 @@ try:
     print(f"Current Page: {page_title}")
     assert page_title == "Home Page - BucStop", f"Expected title to be 'Home Page - BucStop', but got {page_title}"
 
-    
-    
-    # 2) Navigates to the login page after clicking the games page.
-    print("2) Navigating to Login Page...")
-
-    games_link = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.LINK_TEXT, "Games"))
-    )
-    games_link.click()
-
-    time.sleep(1)
-    headers = driver.find_elements(By.XPATH, "//h1[text()='Login']")
-    print(f"Headers: {headers}")
-    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Login' on this page"
-
-    
-    
-    # 3) Logs into the product.
-    print("3) Logging into the Product....")
-    email_input = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.ID, "email"))
-    )
-    email_input.clear()
-    email_input.send_keys("dummy@etsu.edu")
-
-    login_button = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.XPATH, "//button[text()='Login']"))
-    )
-    login_button.click()
-
-    time.sleep(1)
-    headers = driver.find_elements(By.XPATH, "//h1[text()='top games']")
-    print(f"Headers: {headers}")
-    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'top games' on this page"
-    
-    
-   
-    # 4) Navigates to the games page.
-    print("4) Navigating to Games....")
+    # Navigates to the games page.
+    print("2) Navigating to Games....")
 
     games_link = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.LINK_TEXT, "Games"))
@@ -110,8 +49,7 @@ try:
 
     
     
-    # 5) Navigates to the snake.
-    print("5) Navigating to snake....")
+    print("3) Navigating to snake....")
     link = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, "a[href='/Games/Play/1']"))
     )
@@ -127,14 +65,8 @@ try:
 
     
     
-    # 6) Plays Snake to 1 point.
-    print("6) Starting Snake....")
-    start_game_test()
-
-    
-    
-    # 7) Navigates to the tetris.
-    print("7) Navigating to tetris....")
+    # Navigates to the tetris.
+    print("4) Navigating to tetris....")
 
     games_link = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.LINK_TEXT, "Games"))
@@ -156,14 +88,8 @@ try:
 
     
     
-    # 8) Plays Tetris to Gameover.
-    print("8) Starting Tetris....")
-    start_game_test()
-
-    
-    
-    # 9) Navigates to the pong.
-    print("9) Navigating to pong....")
+    # Navigates to the pong.
+    print("5) Navigating to pong....")
 
     games_link = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.LINK_TEXT, "Games"))
@@ -185,11 +111,67 @@ try:
 
     
     
-    print("10) Starting Pong....")
-    start_game_test()
+    # Navigates to snapshots.
+    print("6) Navigating to Snapshots....")
+
+    games_link = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.LINK_TEXT, "Snapshots"))
+    )
+    games_link.click()
+
+    time.sleep(1)
+    headers = driver.find_elements(By.XPATH, "//h1[text()='System Snapshots']")
+    print(f"Headers: {headers}")
+    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'System Snapshots' on this page"
 
     
     
+    # Navigates to create a snapshots.
+    print("7) Navigating to Create New Snapshot....")
+
+    create_btn = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "a.btn.btn-create"))
+    )
+    create_btn.click()
+
+    time.sleep(1)
+    headers = driver.find_elements(By.XPATH, "//h1[text()='Create New Snapshot']")
+    print(f"Headers: {headers}")
+    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Create New Snapshot' on this page"
+
+    
+    
+    # Navigates to about.
+    print("8) Navigating to About....")
+
+    games_link = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.LINK_TEXT, "Games"))
+    )
+    games_link.click()
+
+
+
+    # Navigates to admin.
+    print("9) Navigating to Admin....")
+    print("Work In Progress: Admin page has been removed for now.")
+
+
+    
+    # Navigates to add your game.
+    print("10) Navigating to Add Your Game....")
+
+    add_link = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.LINK_TEXT, "Add Your Game!"))
+    )
+    add_link.click()
+
+    time.sleep(1)
+    #headers = driver.find_elements(By.XPATH, "//h1[text()='Game Suggestion Guide']")
+    headers = driver.find_elements(By.XPATH, "//h1[text()='Submissions Temporarily Unavailable']")
+    print(f"Headers: {headers}")
+    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Submissions Temporarily Unavailable' on this page"
+    #assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Game Suggestion Guide' on this page"
+
 finally:
     print("Test Complete")
     driver.quit()
