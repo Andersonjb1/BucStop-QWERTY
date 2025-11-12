@@ -90,10 +90,6 @@ namespace Gateway
                             _logger.LogInformation("Found {Count} submission(s) in JSON file {File}", submissions.Count, jsonFile);
 
                             // Convert each submission to GameInfo
-                            // Converts the file info from submission into the GameInfo format
-                            // ID doesn't work
-                            // preform the command below to confirm the submission is working:
-                            // Invoke-WebRequest -Uri http://localhost:8085/SubmissionGateway
                             foreach (var sub in submissions)
                             {
                                 var game = new GameInfo
