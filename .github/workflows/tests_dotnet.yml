@@ -2,10 +2,10 @@ name: .NET Tests (any branch, PR + post-merge)
 
 on:
   pull_request:
-    branches: ["**"]                          # Tests after pull request is made in any target branch.
+    branches: ["**"]
     types: [opened, synchronize, reopened, ready_for_review, closed]
   push:
-    branches: ["**"]                          # merge commits and direct pushes
+    branches: ["**"]
 
 concurrency:
   group: tests-${{ github.event.pull_request.number || github.ref }}
@@ -18,31 +18,83 @@ jobs:
     if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' || github.event.pull_request.merged == true }}
 
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: "8.0.x" }
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # discover & run (all tests for simplicity; you can drop in your affected-only logic)
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      # Discover test projects anywhere in the repo
       - id: list_tests
+        name: Find test projects
         shell: bash
         run: |
-          shopt -s nullglob
-          mapfile -t TESTS < <(git ls-files '*Tests.csproj')
-          if [ ${#TESTS[@]} -eq 0 ]; then echo "none=true" >> $GITHUB_OUTPUT; else printf '%s\n' "${TESTS[@]}" > tests.txt; echo "none=false" >> $GITHUB_OUTPUT; fi
+          set -euo pipefail
+          shopt -s globstar nullglob
+          # Get all csproj files tracked by git
+          mapfile -t ALL_CS < <(git ls-files '**/*.csproj' || true)
+
+          TESTS=()
+          for p in "${ALL_CS[@]}"; do
+            # Check for common test-related package references or explicit IsTestProject
+            if grep -qE '<PackageReference .*Microsoft\.NET\.Test\.Sdk|<PackageReference .*xunit|<PackageReference .*xunit\.runner|<PackageReference .*MSTest\.TestAdapter|<PackageReference .*NUnit|<PackageReference .*coverlet\.collector' "$p" \
+               || grep -q '<IsTestProject>true</IsTestProject>' "$p"; then
+              TESTS+=("$p")
+            else
+              # Fallback: treat as test if filename or path contains Test or Tests
+              if [[ "$p" =~ [Tt]est ]]; then
+                TESTS+=("$p")
+              fi
+            fi
+          done
+
+          if [ ${#TESTS[@]} -eq 0 ]; then
+            echo "none=true" >> $GITHUB_OUTPUT
+          else
+            printf '%s\n' "${TESTS[@]}" > tests.txt
+            echo "none=false" >> $GITHUB_OUTPUT
+          fi
 
       - if: steps.list_tests.outputs.none == 'false'
-        run: dotnet build --configuration Release --nologo
+        name: Display discovered tests
+        run: |
+          echo "Discovered test projects:"
+          cat tests.txt
 
       - if: steps.list_tests.outputs.none == 'false'
+        name: Restore and Build test projects
         shell: bash
         run: |
+          set -euo pipefail
           while read -r proj; do
+            echo "==> dotnet restore $proj"
+            dotnet restore "$proj"
+            echo "==> dotnet build $proj"
+            dotnet build "$proj" --configuration Release --no-restore --nologo
+          done < tests.txt
+
+      - if: steps.list_tests.outputs.none == 'false'
+        name: Run tests (one project at a time)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Run tests for each discovered project. Each TRX will be named <projname>-test-results.trx
+          while read -r proj; do
+            name=$(basename "$proj" .csproj)
             echo "==> dotnet test $proj"
-            dotnet test "$proj" --configuration Release --no-build --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test-results.trx"
+            dotnet test "$proj" \
+              --configuration Release \
+              --no-build \
+              --collect:"XPlat Code Coverage" \
+              --logger "trx;LogFileName=${name}-test-results.trx"
           done < tests.txt
 
       - if: always()
+        name: Upload test results (TRX) and coverage
         uses: actions/upload-artifact@v4
         with:
           name: dotnet-test-results-${{ github.sha }}
