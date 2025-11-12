@@ -26,7 +26,7 @@ public class GamesControllerTests
 
         // Act & Assert
         // It should be valid (no errors) when first created.
-        Assert.False(result.IsValid);
+        Assert.True(result.IsValid);
         Assert.Empty(result.Errors);
         Assert.Equal("", result.ErrorMessage);
     }
