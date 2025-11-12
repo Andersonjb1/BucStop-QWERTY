@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 
 
+
 /*
  * This file handles the links to each of the game pages.
  */
@@ -149,7 +150,47 @@ namespace BucStop.Controllers
                 _logger.LogInformation("New game suggestion received from {User}: {Title}",
                                        submissionModel.Username, submissionModel.SuggestedTitle);
 
-                // TODO: Save submissionModel to database or secured file store
+                // TODO: Save submissionModel to database or secured file store --------------------------
+                // Define the Docker-mounted directory path
+                var submissionDirectory = "/app/Submissions";
+
+                // Ensure directory exists (it should, but just in case)
+                if (!Directory.Exists(submissionDirectory))
+                {
+                    Directory.CreateDirectory(submissionDirectory);
+                }
+                
+                // Uses the same submission model structure for JSON storage
+                var data = new List<GameSubmissionModel> { submissionModel };
+
+                var fileExtension = Path.GetExtension(jsFile.FileName).ToLowerInvariant();
+
+                // Create a unique filename: username + timestamp
+                var uniqueFileName = $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
+                var uniqueJsonName = $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
+                var uniqueFolderName = Path.Combine(submissionDirectory, $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}");
+
+                // Create a unique folder for each submission
+                Directory.CreateDirectory(uniqueFolderName);
+
+                // Full path inside container (which maps to the Docker volume)
+                var filePath = Path.Combine(uniqueFolderName, uniqueFileName);
+                var jsonPath = Path.Combine(uniqueFolderName, uniqueJsonName);
+
+                // creates and writes the JSON file
+                await using var createStream = System.IO.File.Create(jsonPath);
+                await JsonSerializer.SerializeAsync(createStream, data, new JsonSerializerOptions { WriteIndented = true });
+
+                // Save file to the Docker volume
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await jsFile.CopyToAsync(stream);
+
+                }
+
+                TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
+                //    END OF SAVING ----------------------------------------------------------------------
+            
 
                 TempData["Message"] = "Success! Your game suggestion has been submitted for review.";
                 TempData["SubmittedTitle"] = submissionModel.SuggestedTitle;
