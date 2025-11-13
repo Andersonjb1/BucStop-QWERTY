@@ -6,6 +6,14 @@
  * Mobile/responsive & container-fit pass by ChatGPT.
  */
 
+// Scroll prevention for arrow keys and spacebar
+window.addEventListener("keydown", function(e) {
+    // Arrow keys or Spacebar
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
 const canvas = document.getElementById('game');
 const context = canvas.getContext('2d');
 

@@ -60,7 +60,8 @@ namespace BucStop.Controllers
 
                 stopwatch.Stop();
 
-                _logger.LogInformation("{Category}: {User} successfully logged in.", "UserActivity", email);
+                // After successful login
+                _logger.LogInformation("{Category}: A user successfully logged in.", "UserActivity");
                 _logger.LogInformation("{Category}: Successful Login Page Loaded in {LoadTime}ms.", "PageLoadTimes", stopwatch.ElapsedMilliseconds);
 
                 return RedirectToAction("Index", "Home");
@@ -68,7 +69,8 @@ namespace BucStop.Controllers
             else
             {
                 // Authentication failed, return to the login page with an error message
-                _logger.LogWarning("{Category}: Invalid login attempt for {Email}", "InvalidLogin", email);
+                // After failed login
+                _logger.LogWarning("{Category}: Invalid ETSU login attempt.", "InvalidLogin");
                 ModelState.AddModelError(string.Empty, "Only ETSU students can play, sorry :(");
 
                 stopwatch.Stop();
