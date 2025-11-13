@@ -40,12 +40,12 @@ jobs:
 
           TESTS=()
           for p in "${ALL_CS[@]}"; do
-            # Check for common test-related package references or explicit IsTestProject
+            # Check for test-related package references or <IsTestProject>
             if grep -qE '<PackageReference .*Microsoft\.NET\.Test\.Sdk|<PackageReference .*xunit|<PackageReference .*xunit\.runner|<PackageReference .*MSTest\.TestAdapter|<PackageReference .*NUnit|<PackageReference .*coverlet\.collector' "$p" \
                || grep -q '<IsTestProject>true</IsTestProject>' "$p"; then
               TESTS+=("$p")
             else
-              # Fallback: treat as test if filename or path contains Test or Tests
+              # Fallback: detect test projects by filename/path
               if [[ "$p" =~ [Tt]est ]]; then
                 TESTS+=("$p")
               fi
@@ -82,16 +82,52 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Run tests for each discovered project. Each TRX will be named <projname>-test-results.trx
+          mkdir -p TestResults
           while read -r proj; do
             name=$(basename "$proj" .csproj)
-            echo "==> dotnet test $proj"
+            echo "==> Running tests for $name..."
             dotnet test "$proj" \
               --configuration Release \
               --no-build \
-              --collect:"XPlat Code Coverage" \
-              --logger "trx;LogFileName=${name}-test-results.trx"
+              --logger "trx;LogFileName=${name}-results.trx" \
+              --results-directory "TestResults"
           done < tests.txt
+
+      - if: always()
+        name: Summarize test results
+        shell: bash
+        run: |
+          echo "========== TEST SUMMARY =========="
+
+          total_passed=0
+          total_failed=0
+          total_skipped=0
+
+          # Loop through all TRX files
+          for file in TestResults/*.trx; do
+            echo ""
+            echo "Results from: $file"
+            # Extract counts
+            passed=$(grep -o 'outcome="Passed"' "$file" | wc -l || true)
+            failed=$(grep -o 'outcome="Failed"' "$file" | wc -l || true)
+            skipped=$(grep -o 'outcome="NotExecuted"' "$file" | wc -l || true)
+
+            total_passed=$((total_passed + passed))
+            total_failed=$((total_failed + failed))
+            total_skipped=$((total_skipped + skipped))
+
+            if [ "$failed" -gt 0 ]; then
+              echo "Failed tests:"
+              # List each failed test name on its own line
+              grep -oP '(?<=<UnitTestResult [^>]*outcome="Failed"[^>]*testName=")[^"]+' "$file" || true
+            fi
+          done
+
+          echo ""
+          echo "✅ Passed: $total_passed"
+          echo "❌ Failed: $total_failed"
+          echo "⚠️ Skipped: $total_skipped"
+          echo "=================================="
 
       - if: always()
         name: Upload test results (TRX) and coverage
@@ -99,6 +135,6 @@ jobs:
         with:
           name: dotnet-test-results-${{ github.sha }}
           path: |
-            **/TestResults/**/*.trx
-            **/TestResults/**/coverage.cobertura.xml
+            TestResults/**/*.trx
+            **/coverage.cobertura.xml
           if-no-files-found: ignore
