@@ -159,17 +159,17 @@ try:
     
     # Navigates to add your game.
     print("10) Navigating to Add Your Game....")
+    print("Under Construction: Game submissions are currently disabled.")
+    #add_link = WebDriverWait(driver, 10).until(
+    #    EC.element_to_be_clickable((By.LINK_TEXT, "Add Your Game!"))
+    #)
+    #add_link.click()
 
-    add_link = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.LINK_TEXT, "Add Your Game!"))
-    )
-    add_link.click()
-
-    time.sleep(1)
+    #time.sleep(1)
     #headers = driver.find_elements(By.XPATH, "//h1[text()='Game Suggestion Guide']")
-    headers = driver.find_elements(By.XPATH, "//h1[text()='Submissions Temporarily Unavailable']")
-    print(f"Headers: {headers}")
-    assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Submissions Temporarily Unavailable' on this page"
+    #headers = driver.find_elements(By.XPATH, "//h1[text()='Submissions Temporarily Unavailable']")
+    #print(f"Headers: {headers}")
+    #assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Submissions Temporarily Unavailable' on this page"
     #assert len(headers) > 0, f"Couldn't find the h1 tag with the text 'Game Suggestion Guide' on this page"
 
 finally:
