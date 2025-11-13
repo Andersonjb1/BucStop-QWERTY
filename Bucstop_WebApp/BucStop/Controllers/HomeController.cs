@@ -49,23 +49,8 @@ namespace BucStop.Controllers
             return View();
         }
 
-        //Takes the user to version 2.1 page
-        public IActionResult TwoDotOne()
-        {
-            return View();
-        }
-
-        public IActionResult TwoDotTwo()
-        {
-            return View();
-        }
-
-        public IActionResult TwoDotThree()
-        {
-            return View();
-        }
-
-        public IActionResult TwoDotFour()
+        //Takes the user to Releases page
+        public IActionResult Releases()
         {
             return View();
         }
