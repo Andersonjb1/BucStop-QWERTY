@@ -152,41 +152,85 @@ namespace BucStop.Controllers
 
                 // TODO: Save submissionModel to database or secured file store --------------------------
                 // Define the Docker-mounted directory path
-                var submissionDirectory = "/app/Submissions";
+// Define the Docker-mounted directory path
+var submissionDirectory = "/app/Submissions";
 
-                // Ensure directory exists (it should, but just in case)
-                if (!Directory.Exists(submissionDirectory))
-                {
-                    Directory.CreateDirectory(submissionDirectory);
-                }
-                
-                // Uses the same submission model structure for JSON storage
-                var data = new List<GameSubmissionModel> { submissionModel };
+// Ensure base directory exists (defense in depth)
+if (!Directory.Exists(submissionDirectory))
+{
+    Directory.CreateDirectory(submissionDirectory);
+}
 
-                var fileExtension = Path.GetExtension(jsFile.FileName).ToLowerInvariant();
+// ---------- SECURITY: validate and normalize everything ----------
 
-                // Create a unique filename: username + timestamp
-                var uniqueFileName = $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}{fileExtension}";
-                var uniqueJsonName = $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json";
-                var uniqueFolderName = Path.Combine(submissionDirectory, $"{submissionModel.Username}_{DateTime.UtcNow:yyyyMMdd_HHmmss}");
+// 1) Only allow .js uploads
+var fileExtension = Path.GetExtension(jsFile.FileName).ToLowerInvariant();
+var allowedExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".js" };
+if (!allowedExts.Contains(fileExtension))
+{
+    TempData["Message"] = "Only .js files are allowed.";
+    return RedirectToAction("Index", "Home");
+}
 
-                // Create a unique folder for each submission
-                Directory.CreateDirectory(uniqueFolderName);
+// 2) Sanitize user-controlled component (username) so it is ONE safe path component
+static string SanitizeComponent(string input)
+{
+    if (string.IsNullOrWhiteSpace(input)) return "anon";
+    // allow letters, digits, dot, underscore, hyphen; replace others with underscore
+    var cleaned = Regex.Replace(input, @"[^A-Za-z0-9._-]", "_");
+    cleaned = cleaned.Trim(' ', '.'); // avoid leading/trailing dots or spaces
+    if (cleaned.Length == 0) return "anon";
+    // collapse any accidental parent-dir hints
+    cleaned = cleaned.Replace("..", "_");
+    return cleaned;
+}
 
-                // Full path inside container (which maps to the Docker volume)
-                var filePath = Path.Combine(uniqueFolderName, uniqueFileName);
-                var jsonPath = Path.Combine(uniqueFolderName, uniqueJsonName);
+var safeUser = SanitizeComponent(submissionModel.Username);
+var stamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
 
-                // creates and writes the JSON file
-                await using var createStream = System.IO.File.Create(jsonPath);
-                await JsonSerializer.SerializeAsync(createStream, data, new JsonSerializerOptions { WriteIndented = true });
+// 3) Build names using safe components
+var uniqueFileName = $"game_{safeUser}_{stamp}{fileExtension}";
+var uniqueJsonName = $"meta_{safeUser}_{stamp}.json";
+var folderName     = $"{safeUser}_{stamp}";
 
-                // Save file to the Docker volume
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await jsFile.CopyToAsync(stream);
+// 4) Combine under the approved root, then normalize and verify containment
+static string EnsureUnderRoot(string root, string path)
+{
+    var fullRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+    var fullPath = Path.GetFullPath(path);
+    if (!fullPath.StartsWith(fullRoot, StringComparison.Ordinal))
+        throw new InvalidOperationException("Invalid path.");
+    return fullPath;
+}
 
-                }
+var uniqueFolderCandidate = Path.Combine(submissionDirectory, folderName);
+var uniqueFolderPath      = EnsureUnderRoot(submissionDirectory, uniqueFolderCandidate);
+
+// Now that the path is proven safe, create it.
+Directory.CreateDirectory(uniqueFolderPath);
+
+// Resolve file targets (and re-verify if desired)
+var filePathCandidate = Path.Combine(uniqueFolderPath, uniqueFileName);
+var jsonPathCandidate = Path.Combine(uniqueFolderPath, uniqueJsonName);
+
+var filePath = EnsureUnderRoot(submissionDirectory, filePathCandidate);
+var jsonPath = EnsureUnderRoot(submissionDirectory, jsonPathCandidate);
+
+// ---------- WRITE FILES SAFELY ----------
+
+// Save the JSON metadata
+await using (var createStream = System.IO.File.Create(jsonPath))
+{
+    await JsonSerializer.SerializeAsync(createStream, new List<GameSubmissionModel> { submissionModel },
+        new JsonSerializerOptions { WriteIndented = true });
+}
+
+// Save the uploaded JS file
+using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+{
+    await jsFile.CopyToAsync(stream);
+}
+
 
                 TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
                 //    END OF SAVING ----------------------------------------------------------------------
