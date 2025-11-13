@@ -32,7 +32,7 @@ namespace BucStop.Controllers
         public IActionResult Admin()
         {
             _logger.LogInformation("{Category}: {User} visited the Admin page.", "UserActivity", User.Identity?.Name ?? "Anonymous");
-            return View();
+            return View(_httpClient.GetGamesList());
         }
 
         //Takes the user to the about policy page.
