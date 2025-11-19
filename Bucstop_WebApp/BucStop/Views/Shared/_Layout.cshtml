@@ -52,12 +52,15 @@
                     }
 
                     @if (isAdminPage && (User.Identity?.IsAuthenticated ?? false))
-                        {
-                            <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                    {
+                        <form asp-controller="Account"
+                                asp-action="Logout"
+                                method="post"
+                                class="inline">
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
                             <button type="submit" class="btn btn-link nav-link">Log out</button>
-                            </form>
-                        }
-
+                        </form>
+                    }
                     <!-- This partial view handles login/logout functionality -->
                     <!-- <partial name="_LoginPartial"></partial> -->
                 </div>
