@@ -47,6 +47,12 @@ builder.Services.AddHttpClient<MicroClient>(client =>
     client.BaseAddress = baseAddress;
 });
 
+builder.Services.AddHttpClient<SubmissionClient>(submissionClient =>
+{
+    var baseAddress = new Uri(builder.Configuration.GetValue<string>("SubmissionGateway"));
+    submissionClient.BaseAddress = baseAddress;
+});
+
 {
     // new: register in-memory cache
     builder.Services.AddMemoryCache();

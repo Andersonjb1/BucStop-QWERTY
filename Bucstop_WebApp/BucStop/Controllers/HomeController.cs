@@ -14,11 +14,13 @@ namespace BucStop.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly MicroClient _httpClient;
+        private readonly SubmissionClient _submissionClient;
 
-        public HomeController(MicroClient microClient, ILogger<HomeController> logger)
+        public HomeController(MicroClient microClient, SubmissionClient submissionClient, ILogger<HomeController> logger)
         {
             _logger = logger;
             _httpClient = microClient;
+            _submissionClient = submissionClient;
         }
 
         //Sends the user to the deprecated Index page.
@@ -32,7 +34,8 @@ namespace BucStop.Controllers
         public IActionResult Admin()
         {
             _logger.LogInformation("{Category}: {User} visited the Admin page.", "UserActivity", User.Identity?.Name ?? "Anonymous");
-            return View(_httpClient.GetGamesList());
+            return View(_submissionClient.GetSubmissionsList());
+
         }
 
         //Takes the user to the about policy page.

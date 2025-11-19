@@ -7,12 +7,11 @@ using System.Text;
 using BucStop.Models;
 using BucStop.Controllers;
 
-// TESTING DEPLOY ACTION
-
 namespace BucStop
 {
     public class MicroClient
     {
+
         private readonly JsonSerializerOptions options = new JsonSerializerOptions()
         {
             PropertyNameCaseInsensitive = true,
@@ -24,7 +23,7 @@ namespace BucStop
         private List<Game> gamesList;
         private Task<List<Game>> gamesTask;
 
-        public MicroClient(HttpClient client, ILogger<MicroClient> logger)
+        public MicroClient(HttpClient client, HttpClient submissionClient, ILogger<MicroClient> logger)
         {
             this.client = client;
             this._logger = logger;
