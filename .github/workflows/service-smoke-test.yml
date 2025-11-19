@@ -1,6 +1,8 @@
 name: Service Smoke Tests
 
-on:
+permissions:
+  contents: read
+
   pull_request:
     branches: ["**"]  # Run for PRs targeting any branch
     types: [opened, synchronize, reopened, ready_for_review]

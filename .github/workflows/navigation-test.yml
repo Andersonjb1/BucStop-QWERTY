@@ -1,5 +1,8 @@
 name: Automated Selenium Testing
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches:
@@ -42,13 +45,13 @@ jobs:
 
     - name: Build and Start Containers
       run: |
-         timeout 300s bash -c '
-           env=containersLocal docker compose up -d
-           echo "Waiting for containers to start..."
-           docker compose wait || echo "docker compose wait timed out or failed"
-         ' 
-         sleep 5
-         docker ps -a || true
+          timeout 300s bash -c '
+            env=containersLocal docker compose up -d
+            echo "Waiting for containers to start..."
+            docker compose wait || echo "docker compose wait timed out or failed"
+          ' 
+          sleep 5
+          docker ps -a || true
 
     - name: Setup Python
       uses: actions/setup-python@v5

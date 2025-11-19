@@ -1,5 +1,8 @@
 name: .NET Tests (any branch, PR + post-merge)
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: ["**"]
@@ -42,7 +45,7 @@ jobs:
           for p in "${ALL_CS[@]}"; do
             # Check for test-related package references or <IsTestProject>
             if grep -qE '<PackageReference .*Microsoft\.NET\.Test\.Sdk|<PackageReference .*xunit|<PackageReference .*xunit\.runner|<PackageReference .*MSTest\.TestAdapter|<PackageReference .*NUnit|<PackageReference .*coverlet\.collector' "$p" \
-               || grep -q '<IsTestProject>true</IsTestProject>' "$p"; then
+              || grep -q '<IsTestProject>true</IsTestProject>' "$p"; then
               TESTS+=("$p")
             else
               # Fallback: detect test projects by filename/path
