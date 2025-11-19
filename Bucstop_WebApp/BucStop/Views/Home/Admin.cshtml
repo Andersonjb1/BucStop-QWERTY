@@ -33,39 +33,54 @@
         color: white;
         font-size: 20px;
         overflow: visible;
-        /*top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        -ms-transform: translate(-50%, -50%);*/
+    }
+
+    /* wrapper fix */
+    .image-wrapper {
+        position: relative;
+        overflow: hidden;
     }
 </style>
-<!-- This is the games list page. Each of the games is loaded in from the model using the game's ID value -->
+
 <h1>Submissions</h1>
 
 <div class="row gy-4" style="margin-left: 20px; margin-right: 20px;">
-    <!-- Goes through the list of games held in the Game model and lists the pertinent information.-->
     @foreach (var game in Model)
     {
         <div class="col-sm-4 d-flex">
             <div class="card">
-                <a href="@Url.Action("Test", "Games", new { id = game.Id })" style="text-decoration: none;">
-                    <!--<img src="@game.Thumbnail" class="card-img-top">
-                                        <div class="card-body">
-                                            <h5 class="card-title">@game.Title</h5>
-                                            <p class="card-text"><small class="text-muted">@game.Description</small></p>
-                                            <p class="text-muted">Play Count: @game.PlayCount</p>
-                                        </div>
-                                            -->
-                    <div class="card-body">
-                        <img src="@game.Thumbnail" class="card-img-top image" alt="@game.Title">
-                    </div>
-                    <div class="container overlay">
-                        <div class="card-title text">@game.Title</div>
-                        <div class="card-text text game-description"><small class="text-muted">@game.Description</small>
+                <!-- NEW WRAPPER START -->
+                <div class="image-wrapper">
+                    <a href="@Url.Action("Test", "Games", new { id = game.Id })" style="text-decoration: none;">
+                        <!--<img src="@game.Thumbnail" class="card-img-top">
+                                            <div class="card-body">
+                                                <h5 class="card-title">@game.Title</h5>
+                                                <p class="card-text"><small class="text-muted">@game.Description</small></p>
+                                                <p class="text-muted">Play Count: @game.PlayCount</p>
+                                            </div>
+                                                -->
+                        <div class="card-body">
+                            <img src="@game.Thumbnail" class="card-img-top image" alt="@game.Title">
                         </div>
-                        <div class="text-muted game-play-count">Play Count: @game.PlayCount</div>
-                    </div>
-                </a>
+                        <div class="container overlay">
+                            <div class="card-title text">@game.Title</div>
+                            <div class="card-text text game-description">
+                                <small class="text-muted">@game.Description</small>
+                            </div>
+                            <div class="text-muted game-play-count">Play Count: @game.PlayCount</div>
+                        </div>
+                    </a>
+                </div>
+                <!-- NEW WRAPPER END -->
+                <div class="card-footer text-center mt-2">
+                    <button type="button" class="btn btn-success btn-sm" disabled>
+                        Approve
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm ms-2" disabled>
+                        Reject
+                    </button>
+                </div>
+
             </div>
         </div>
     }
