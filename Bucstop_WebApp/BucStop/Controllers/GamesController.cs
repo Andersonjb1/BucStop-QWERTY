@@ -183,9 +183,18 @@ namespace BucStop.Controllers
                 // SECURITY WARNING: NEVER execute RawJsCodeContent directly. 
                 // Save to a secure location for manual review.
 
-                _logger.LogInformation("New game suggestion received from {User}: {Title}",
-                                       submissionModel.Username, submissionModel.SuggestedTitle);
+                // Sanitize user input before logging to prevent log forging
+                var safeUsername = submissionModel.Username?
+                    .Replace("\r", string.Empty)
+                    .Replace("\n", string.Empty);
 
+                var safeTitle = submissionModel.SuggestedTitle?
+                    .Replace("\r", string.Empty)
+                    .Replace("\n", string.Empty);
+
+                _logger.LogInformation("New game suggestion received from {User}: {Title}",
+                    safeUsername,
+                    safeTitle);
                 // TODO: Save submissionModel to database or secured file store --------------------------
                 // Define the Docker-mounted directory path
 // Define the Docker-mounted directory path
