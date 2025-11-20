@@ -47,6 +47,8 @@ namespace Gateway
                     try
                     {
                         _logger.LogInformation("Processing folder: {Folder}", folder);
+                        // extract folder name
+                        var folderName = Path.GetFileName(folder);
 
                         // Below finds the json files
                         var jsonFiles = Directory.GetFiles(folder, "*.json");
@@ -102,7 +104,9 @@ namespace Gateway
                                     DateAdded = DateTime.UtcNow.ToString("yyyy-MM-dd"),
                                     Thumbnail = sub.SuggestedThumbnailUrl ?? "",
                                     Content = jsRelativePath,
-                                    LeaderBoardStack = GenerateDummyLeaderboard()
+                                    LeaderBoardStack = GenerateDummyLeaderboard(),
+
+                                    FolderName = folderName
                                 };
 
                                 _logger.LogInformation("Added game: {Title} by {Author}", game.Title, game.Author);
