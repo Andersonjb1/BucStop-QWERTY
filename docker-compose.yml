@@ -69,13 +69,9 @@ services:
       - bucstop-network
 
   submission-gateway:
-    # Uncomment the following next 3 lines once the code for the Submission Gateway is added.
-    #build:
-    #  context: ./Team-QWERTY-BucStop_Submission/SubmissionAPIGateway
-    #  dockerfile: Dockerfile
-    # Using a placeholder "hello world" image since there isn't code to build yet.
-    image: "hello-world" # This line should be deleted once Submission Gateway is implemented.
+    image: "ghcr.io/andersonjb1/bucstop-qwerty/submission-gateway:latest"
     container_name: submission-gateway
+    restart: unless-stopped
     ports:
       - "8085:80"
     networks:
