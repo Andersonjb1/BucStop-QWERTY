@@ -17,18 +17,24 @@ namespace BucStop.Controllers
         {
             _logger = logger;
         }
+
         [AllowAnonymous]
-        public IActionResult Login()
+        public IActionResult Login(string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(string email)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(string email, string? returnUrl = null)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
+
+            // keep returnUrl available for redisplay if there's an error
+            ViewData["ReturnUrl"] = returnUrl;
 
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -41,10 +47,10 @@ namespace BucStop.Controllers
 
                 return View();
             }
-            
-            //ToLower added to remove case sensitivity. Current Font makes all lettering look like capital letters.
+
+            // ToLower added to remove case sensitivity. Current font makes all lettering look like capital letters.
             if (Regex.IsMatch(email.ToLower(), @"\b[A-Za-z0-9._%+-]+@etsu\.edu\b"))
-            {                
+            {
                 // If authentication is successful, create a ClaimsPrincipal and sign in the user
                 var claims = new[]
                 {
@@ -64,12 +70,18 @@ namespace BucStop.Controllers
                 _logger.LogInformation("{Category}: A user successfully logged in.", "UserActivity");
                 _logger.LogInformation("{Category}: Successful Login Page Loaded in {LoadTime}ms.", "PageLoadTimes", stopwatch.ElapsedMilliseconds);
 
+                // if we came from a protected page like /Home/Admin, go back there
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                // Fallback: same as before
                 return RedirectToAction("Index", "Home");
             }
             else
             {
                 // Authentication failed, return to the login page with an error message
-                // After failed login
                 _logger.LogWarning("{Category}: Invalid ETSU login attempt.", "InvalidLogin");
                 ModelState.AddModelError(string.Empty, "Only ETSU students can play, sorry :(");
 
@@ -81,15 +93,18 @@ namespace BucStop.Controllers
             }
         }
 
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout(string? returnUrl = null)
         {
             _logger.LogInformation("{Category}: {User} logged out.", "UserActivity", User.Identity?.Name ?? "Anonymous");
-
             _logger.LogInformation("User logged out.");
             await HttpContext.SignOutAsync("CustomAuthenticationScheme");
+            // If we know where they came from (e.g., /Home/Admin), send it to Login
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return RedirectToAction("Login", new { returnUrl });
+            }
+            // Fallback: normal behavior
             return RedirectToAction("Login");
         }
-
-
     }
 }

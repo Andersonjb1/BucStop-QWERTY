@@ -18,12 +18,15 @@ namespace BucStop.Controllers
     public class GamesController : Controller
     {
         private readonly MicroClient _httpClient;
+
+        private readonly SubmissionClient _submissionClient;
         private readonly PlayCountManager _playCountManager;
         private readonly ILogger<GamesController> _logger;
 
-        public GamesController(MicroClient microClient, IWebHostEnvironment webHostEnvironment, ILogger<GamesController> logger)
+        public GamesController(MicroClient microClient, SubmissionClient submissionClient, IWebHostEnvironment webHostEnvironment, ILogger<GamesController> logger)
         {
             _httpClient = microClient;
+            _submissionClient = submissionClient;
             _logger = logger;
             _playCountManager = new PlayCountManager(_httpClient.GetGamesList() ?? new List<Game>(), webHostEnvironment);
         }
@@ -69,6 +72,39 @@ namespace BucStop.Controllers
             }
 
             _logger.LogInformation("Loading game URL: {GameUrl}", game.Content);
+            _playCountManager.IncrementPlayCount(id);
+
+            int playCount = _playCountManager.GetPlayCount(id);
+            game.PlayCount = playCount;
+
+            _logger.LogInformation("{Category}: Game '{GameTitle}' (ID: {GameId}) successfully loaded.",
+                                    "GameSuccess", game.Title, game.Id);
+            _logger.LogInformation("{Category}: {User} started playing '{GameTitle}' (ID: {GameId}).",
+                                    "UserActivity", User.Identity?.Name ?? "Anonymous", game.Title, game.Id);
+
+            stopwatch.Stop();
+            _logger.LogInformation("{Category}: {GameTitle} Page Loaded in {LoadTime}ms.", "PageLoadTimes", game.Title, stopwatch.ElapsedMilliseconds);
+
+            return View(game);
+        }
+
+        public async Task<IActionResult> Test(int id)
+        {
+            _logger.LogInformation("{Category}: Admin requested to test game with ID {GameId}.", "GameSuccess", id);
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            List<Game> games = _submissionClient.GetSubmissionsList();
+
+            Game game = games.FirstOrDefault(x => x.Id == id);
+            if (game == null)
+            {
+                _logger.LogWarning("{Category}: Submission with ID {GameId} not found.", "GameSuccess", id);
+                return NotFound();
+            }
+
+            _logger.LogInformation("Loading submission URL: {GameUrl}", game.Content);
             _playCountManager.IncrementPlayCount(id);
 
             int playCount = _playCountManager.GetPlayCount(id);
