@@ -11,5 +11,6 @@ namespace Gateway
         public string HowTo { get; set; }
         public string Thumbnail { get; set; }
         public Stack<KeyValuePair<string, int>> LeaderBoardStack { get; set; }
+        public string FolderName { get; set; } = string.Empty;
     }
 }

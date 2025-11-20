@@ -2,6 +2,7 @@ using BucStop;
 using BucStop.Services;
 using Serilog;
 using Serilog.Filters;
+using Microsoft.Extensions.FileProviders;
 
 /*
  * This is the base program which starts the project.
@@ -47,6 +48,12 @@ builder.Services.AddHttpClient<MicroClient>(client =>
     client.BaseAddress = baseAddress;
 });
 
+builder.Services.AddHttpClient<SubmissionClient>(submissionClient =>
+{
+    var baseAddress = new Uri(builder.Configuration.GetValue<string>("SubmissionGateway"));
+    submissionClient.BaseAddress = baseAddress;
+});
+
 {
     // new: register in-memory cache
     builder.Services.AddMemoryCache();
@@ -61,8 +68,10 @@ builder.Services.AddAuthentication("CustomAuthenticationScheme").AddCookie("Cust
 // Ensure directories exist
 var snapshotsPath = Path.Combine(builder.Environment.ContentRootPath, "Snapshots");
 var logsPath = Path.Combine(builder.Environment.ContentRootPath, "Logs");
+var submissionsPath = Path.Combine(builder.Environment.ContentRootPath, "Submissions");
 Directory.CreateDirectory(snapshotsPath);
 Directory.CreateDirectory(logsPath);
+Directory.CreateDirectory(submissionsPath);
 
 builder.Services.AddHostedService<ApiHeartbeatService>();
 builder.Services.AddScoped<SnapshotService>();
@@ -90,6 +99,13 @@ if (!app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Add this block to serve files from the Submissions directory
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(submissionsPath),
+    RequestPath = "/Submissions"
+});
 
 app.UseRouting();
 

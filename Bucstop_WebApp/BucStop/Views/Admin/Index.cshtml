@@ -1,0 +1,116 @@
+@model List<BucStop.Models.Game>
+
+<style>
+    .container {
+        position: relative;
+        width: 100%;
+    }
+
+    .image {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    .overlay {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background-color: #008CBA;
+        overflow: hidden;
+        width: 100%;
+        height: 0;
+        transition: .5s ease;
+    }
+
+    .container:hover .overlay {
+        bottom: 0;
+        height: 100%;
+    }
+
+    .text {
+        color: white;
+        font-size: 20px;
+        overflow: visible;
+    }
+
+    /* wrapper fix */
+    .image-wrapper {
+        position: relative;
+        overflow: hidden;
+    }
+</style>
+
+<h1>Submissions</h1>
+
+<div class="row gy-4" style="margin-left: 20px; margin-right: 20px;">
+    @foreach (var game in Model)
+    {
+        <div class="col-sm-4 d-flex">
+            <div class="card">
+                <!-- NEW WRAPPER START -->
+                <div class="image-wrapper">
+                    <a href="@Url.Action("Test", "Games", new { id = game.Id })" style="text-decoration: none;">
+                        <!--<img src="@game.Thumbnail" class="card-img-top">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">@game.Title</h5>
+                                                    <p class="card-text"><small class="text-muted">@game.Description</small></p>
+                                                    <p class="text-muted">Play Count: @game.PlayCount</p>
+                                                </div>
+                                                    -->
+                        <div class="card-body">
+                            <img src="@game.Thumbnail" class="card-img-top image" alt="@game.Title">
+                        </div>
+                        <div class="container overlay">
+                            <div class="card-title text">@game.Title</div>
+                            <div class="card-text text game-description">
+                                <small class="text-muted">@game.Description</small>
+                            </div>
+                            <div class="text-muted game-play-count">Play Count: @game.PlayCount</div>
+                        </div>
+                    </a>
+                </div>
+                <!-- NEW WRAPPER END -->
+                <div class="card-footer text-center mt-2">
+                    <button type="button" class="btn btn-success btn-sm" disabled>
+                        Approve
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm ms-2"
+                            onclick="rejectSubmission('@game.FolderName', this)">
+                        Reject
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    function rejectSubmission(folderName, btn) {
+        if (!confirm("Reject this submission?")) return;
+
+        fetch(`/admin/submissions/${folderName}`, {
+            method: 'DELETE'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+
+                // Remove the card visually
+                const card = btn.closest(".card");
+                if (card) card.remove();
+
+            } else {
+                alert("Failed to delete submission.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Server error: " + err);
+        });
+    }
+</script>
+}
