@@ -1,6 +1,4 @@
-﻿<!DOCTYPE html>
-
-<!-- This file is the generic layout, used by all pages on the site-->
+﻿<!-- This file is the generic layout, used by all pages on the site-->
 <!-- You can think of it as the template for everything else-->
 
 <html lang="en">
@@ -35,27 +33,34 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Games" asp-action="Index">Games</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Snapshots" asp-action="Index">Snapshots</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">About</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="GameCriteria">Add Your Game!</a>
                         </li>
+                        @if(User.Identity?.IsAuthenticated ?? false) {
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Snapshots" asp-action="Index">Snapshots</a>
+                        </li>
+                        }
+
 
                     </ul>
                     @{
                         var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
                         var act = (ViewContext.RouteData.Values["action"]?.ToString() ?? "").ToLower();
-                        var isAdminPage = ctrl == "home" && act == "admin";
+                        var isAdminPage = ctrl == "admin" && act == "index";
+                        var isSnapshotsPage = ctrl == "snapshots" && act == "index";
                     }
 
-                    @if (isAdminPage && (User.Identity?.IsAuthenticated ?? false))
+                    @if ((isAdminPage || isSnapshotsPage) && (User.Identity?.IsAuthenticated ?? false))
                         {
-                            <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
-                            <button type="submit" class="btn btn-link nav-link">Log out</button>
-                            </form>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                        <button type="submit" class="btn btn-link nav-link">Log out</button>
+                    </form>
                         }
 
                     <!-- This partial view handles login/logout functionality -->
