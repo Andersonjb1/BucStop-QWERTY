@@ -1,6 +1,4 @@
-﻿<!DOCTYPE html>
-
-<!-- This file is the generic layout, used by all pages on the site-->
+﻿<!-- This file is the generic layout, used by all pages on the site-->
 <!-- You can think of it as the template for everything else-->
 
 <html lang="en">
@@ -35,20 +33,27 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Games" asp-action="Index">Games</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Snapshots" asp-action="Index">Snapshots</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">About</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="GameCriteria">Add Your Game!</a>
                         </li>
+                        @if(User.Identity?.IsAuthenticated ?? false) {
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Snapshots" asp-action="Index">Snapshots</a>
+                        </li>
+                        }
+
 
                     </ul>
                     @{
                         var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
                         var act = (ViewContext.RouteData.Values["action"]?.ToString() ?? "").ToLower();
-                        var isAdminPage = ctrl == "home" && act == "admin";
+                        var isAdminPage = ctrl == "admin" && act == "index";
+                        var isSnapshotsPage = ctrl == "snapshots" && act == "index";
                     }
 
                     @if (isAdminPage && (User.Identity?.IsAuthenticated ?? false))
@@ -76,7 +81,7 @@
     <!-- This block handles the footer, which includes the version number for the project. -->
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2023 - BucStop - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> - <a href="https://github.com/Andersonjb1/BucStop-QWERTY/releases/latest" style="color:#C6AA76;">Version: 1.3.0</a><a> - </a>
+            &copy; 2023 - BucStop - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> - <a href="https://github.com/Andersonjb1/BucStop-QWERTY/releases/latest" style="color:#C6AA76;">Version: 1.4.0</a><a> - </a>
 
         </div>
     </footer>
