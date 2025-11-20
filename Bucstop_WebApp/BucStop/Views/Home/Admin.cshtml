@@ -53,12 +53,12 @@
                 <div class="image-wrapper">
                     <a href="@Url.Action("Test", "Games", new { id = game.Id })" style="text-decoration: none;">
                         <!--<img src="@game.Thumbnail" class="card-img-top">
-                                            <div class="card-body">
-                                                <h5 class="card-title">@game.Title</h5>
-                                                <p class="card-text"><small class="text-muted">@game.Description</small></p>
-                                                <p class="text-muted">Play Count: @game.PlayCount</p>
-                                            </div>
-                                                -->
+                                                <div class="card-body">
+                                                    <h5 class="card-title">@game.Title</h5>
+                                                    <p class="card-text"><small class="text-muted">@game.Description</small></p>
+                                                    <p class="text-muted">Play Count: @game.PlayCount</p>
+                                                </div>
+                                                    -->
                         <div class="card-body">
                             <img src="@game.Thumbnail" class="card-img-top image" alt="@game.Title">
                         </div>
@@ -76,7 +76,8 @@
                     <button type="button" class="btn btn-success btn-sm" disabled>
                         Approve
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm ms-2" disabled>
+                    <button type="button" class="btn btn-danger btn-sm ms-2"
+                            onclick="rejectSubmission('@game.FolderName', this)">
                         Reject
                     </button>
                 </div>
@@ -85,3 +86,31 @@
         </div>
     }
 </div>
+
+@section Scripts {
+<script>
+    function rejectSubmission(folderName, btn) {
+        if (!confirm("Reject this submission?")) return;
+
+        fetch(`/admin/submissions/${folderName}`, {
+            method: 'DELETE'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+
+                // Remove the card visually
+                const card = btn.closest(".card");
+                if (card) card.remove();
+
+            } else {
+                alert("Failed to delete submission.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Server error: " + err);
+        });
+    }
+</script>
+}

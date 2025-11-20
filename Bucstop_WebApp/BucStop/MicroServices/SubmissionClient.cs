@@ -76,25 +76,26 @@ namespace BucStop
 
         foreach (GameInfo info in gameInfos)
         {
-          Game game = new Game();
+            if (info == null)
+                continue;
 
-          if (info != null)
-          {
-            game.Id = info.Id;
-            game.Title = info.Title;
-            game.Content = info.Content;
-            game.Thumbnail = info.Thumbnail;
-            game.Author = info.Author;
-            game.HowTo = info.HowTo;
-            game.DateAdded = info.DateAdded;
-            game.Description = $"{info.Description} \n {info.DateAdded}";
-            game.LeaderBoard = info.LeaderBoard;
+            Game game = new Game
+            {
+                Id = info.Id,
+                Title = info.Title,
+                Content = info.Content,
+                Thumbnail = info.Thumbnail,
+                Author = info.Author,
+                HowTo = info.HowTo,
+                DateAdded = info.DateAdded,
+                Description = $"{info.Description} \n {info.DateAdded}",
+                LeaderBoard = info.LeaderBoard,
+                FolderName = info.FolderName // <-- IMPORTANT
+            };
 
             _logger.LogInformation("Game ID {Id} Content URL: {Content}", info.Id, info.Content);
 
-          }
-
-          games.Add(game);
+            games.Add(game);
         }
       }
       catch (Exception ex)

@@ -48,6 +48,9 @@ namespace BucStop.Models
         public Stack<KeyValuePair<string, int>> LeaderBoard { get; set; }
         public int PlayCount { get; set; }
 
+        // The name of the folder containing the game files.
+        public string FolderName { get; set; } = string.Empty;
+
         /*public async Task OnGet([FromServices] MicroClient microClient)
         {
             Info = await microClient.GetGamesAsync  ();
