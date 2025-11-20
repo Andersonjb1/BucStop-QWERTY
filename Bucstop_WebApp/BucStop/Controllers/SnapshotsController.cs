@@ -8,6 +8,8 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Net.Http;
+using Microsoft.AspNetCore.Authorization;
+
 
 
 namespace BucStop.Controllers
@@ -36,6 +38,7 @@ namespace BucStop.Controllers
             _host = host;
         }
 
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             var snapshots = await _snapshotService.GetAllSnapshotsAsync();
