@@ -1,9 +1,9 @@
-# Build changed microservice images on push to Sprint-* and ensure all 5 images exist in GHCR
+# Build changed microservice images on push to Sprint-* and ensure all 6 images exist in GHCR
 #
 # - Triggers on push to branches matching Sprint-*
-# - Detects which of the five microservice directories changed
+# - Detects which of the six microservice directories changed
 # - Builds & pushes images for changed services to GitHub Container Registry (GHCR)
-# - Ensures at the end that all 5 service images exist in GHCR (builds any missing ones from the default branch)
+# - Ensures at the end that all 6 service images exist in GHCR (builds any missing ones from the default branch)
 #
 # Services:
 # - webapp  -> "Bucstop_WebApp/BucStop/"
@@ -189,7 +189,7 @@ jobs:
           cache-to: type=inline
 
   ensure-all-images:
-    name: Ensure all 5 images exist in GHCR (build missing ones from latest release or default branch)
+    name: Ensure all 6 images exist in GHCR (build missing ones from latest release or default branch)
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
     env:
