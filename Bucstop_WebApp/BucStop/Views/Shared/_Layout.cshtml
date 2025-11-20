@@ -56,7 +56,7 @@
                         var isSnapshotsPage = ctrl == "snapshots" && act == "index";
                     }
 
-                    @if (isAdminPage && (User.Identity?.IsAuthenticated ?? false))
+                    @if ((isAdminPage || isSnapshotsPage) && (User.Identity?.IsAuthenticated ?? false))
                     {
                         <form asp-controller="Account"
                                 asp-action="Logout"

@@ -1,13 +1,6 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using BucStop.Models;
-using BucStop.Services;
-using Microsoft.AspNetCore.Hosting;
-using System.IO;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using System.Net.Http;
 using Microsoft.AspNetCore.Authorization;
 
 
@@ -23,24 +16,13 @@ namespace BucStop.Controllers
     {
         private readonly ILogger<AdminController> _logger;
         private readonly MicroClient _httpClient;
-        private readonly SnapshotService _snapshotService;
-        private readonly PlayCountManager _playCountManager;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly IHostEnvironment _host;
 
         public AdminController(
             MicroClient microClient,
-            ILogger<AdminController> logger,
-            SnapshotService snapshotService,
-            IWebHostEnvironment webHostEnvironment,
-            IHostEnvironment host)
+            ILogger<AdminController> logger)
         {
-            _snapshotService = snapshotService;
             _httpClient = microClient;
-            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
-            _playCountManager = new PlayCountManager(_httpClient.GetGamesList() ?? new List<Game>(), webHostEnvironment);
-            _host = host;
         }
 
         // Takes the user to the admin page.
