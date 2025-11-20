@@ -16,13 +16,16 @@ namespace BucStop.Controllers
     {
         private readonly ILogger<AdminController> _logger;
         private readonly MicroClient _httpClient;
+        private readonly SubmissionClient _submissionClient;
 
         public AdminController(
             MicroClient microClient,
-            ILogger<AdminController> logger)
+            ILogger<AdminController> logger,
+            SubmissionClient submissionClient)
         {
             _httpClient = microClient;
             _logger = logger;
+            _submissionClient = submissionClient;
         }
 
         // Takes the user to the admin page.
@@ -30,7 +33,7 @@ namespace BucStop.Controllers
         public IActionResult Index()
         {
             _logger.LogInformation("{Category}: {User} visited the Admin page.", "UserActivity", User.Identity?.Name ?? "Anonymous");
-            return View(_httpClient.GetGamesList());
+            return View(_submissionClient.GetSubmissionsList());
         }
 
         // If something goes wrong, this will take the user to a page explaining the error.
