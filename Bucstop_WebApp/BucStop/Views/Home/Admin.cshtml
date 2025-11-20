@@ -49,22 +49,19 @@
     {
         <div class="col-sm-4 d-flex">
             <div class="card">
-
                 <!-- NEW WRAPPER START -->
                 <div class="image-wrapper">
-                    <a href="@Url.Action("Play", "Games", new { id = game.Id })" style="text-decoration: none;">
+                    <a href="@Url.Action("Test", "Games", new { id = game.Id })" style="text-decoration: none;">
                         <!--<img src="@game.Thumbnail" class="card-img-top">
-                            <div class="card-body">
-                                <h5 class="card-title">@game.Title</h5>
-                                <p class="card-text"><small class="text-muted">@game.Description</small></p>
-                                <p class="text-muted">Play Count: @game.PlayCount</p>
-                            </div>
-                                -->
-
+                                            <div class="card-body">
+                                                <h5 class="card-title">@game.Title</h5>
+                                                <p class="card-text"><small class="text-muted">@game.Description</small></p>
+                                                <p class="text-muted">Play Count: @game.PlayCount</p>
+                                            </div>
+                                                -->
                         <div class="card-body">
                             <img src="@game.Thumbnail" class="card-img-top image" alt="@game.Title">
                         </div>
-
                         <div class="container overlay">
                             <div class="card-title text">@game.Title</div>
                             <div class="card-text text game-description">
@@ -72,11 +69,9 @@
                             </div>
                             <div class="text-muted game-play-count">Play Count: @game.PlayCount</div>
                         </div>
-
                     </a>
                 </div>
                 <!-- NEW WRAPPER END -->
-
                 <div class="card-footer text-center mt-2">
                     <button type="button" class="btn btn-success btn-sm" disabled>
                         Approve
