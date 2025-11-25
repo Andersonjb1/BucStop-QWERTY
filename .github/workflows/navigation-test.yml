@@ -7,30 +7,8 @@ on:
   pull_request:
     branches:
       - main
-      - Dev-1
-      - Dev-2
-      - Dev-3
-      - Dev-4
-      - Dev-5
-      - Dev-6
-      - Dev-7
-      - Dev-8
-      - Dev-9
-      - Dev-10
-      - Dev-11
-      - Dev-12
-      - Sprint-1
-      - Sprint-2
-      - Sprint-3
-      - Sprint-4
-      - Sprint-5
-      - Sprint-6
-      - Sprint-7
-      - Sprint-8
-      - Sprint-9
-      - Sprint-10
-      - Sprint-11
-      - Sprint-12
+      - "Dev-*"
+      - "Sprint-*"
 
 jobs:
   test:
@@ -65,7 +43,7 @@ jobs:
 
     - name: Run Navigation Selenium Test
       run: |
-        python ./.automatedTests/v1_1_0_NavigationTest.py
+        python ./.automatedTests/v2_0_0_NavigationTest.py
 
     - name: Run Play Base Games Selenium Test
       run: |
