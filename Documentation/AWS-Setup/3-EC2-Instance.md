@@ -10,7 +10,7 @@ It assumes you already have an AWS account, IAM permissions, a key pair, and a s
 1. Go to **EC2 → Instances → Launch Instance**.
 2. Name the instance: **BucStop**.
 3. Choose an Ubuntu type image.
-4. Select an instance type, `t3.micro` is the most up-to-date as of September 2025. **Currently, you have to use a `t3.large` instance for it to work.**
+4. Select an instance type, `t3.micro` is the most up-to-date as of September 2025.
 5. Attach a key pair:
    - Select existing BucStop keypair or see `1-Key-Pairs.md`.
 6. Configure:
