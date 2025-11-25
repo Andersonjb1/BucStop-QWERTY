@@ -49,15 +49,9 @@ The application is built using a microservices architecture with the following c
 
 2. Start all services using Docker Compose (in dev):
 
-**Linux**
    ```bash
-   sudo env=containers docker compose -f docker-compose.dev.yml build --no-cache
-   sudo env=containers docker compose -f docker-compose.dev.yml up -d
-   ```
-**Windows**
-   ```bash
-   $env:ENV="containersLocal"; docker compose -f docker-compose.dev.yml build --no-cache
-   $env:ENV="containersLocal"; docker compose -f docker-compose.dev.yml up -d
+   docker compose -f docker-compose.dev.yml build --no-cache
+   docker compose -f docker-compose.dev.yml up -d
    ```
 
 3. Access the application:
@@ -70,12 +64,6 @@ The application is built using a microservices architecture with the following c
   
 4. Closing and resetting containers
 
-**Linux**
-   ```bash
-   sudo docker compose down
-   sudo docker system prune -a
-   ```
-**Windows**
    ```bash
    docker compose down
    docker system prune -a
@@ -135,19 +123,20 @@ env=containers docker-compose up -d
 
 ```
 BucStop-QWERTY/
-├── Bucstop WebApp/            # Main web application
+├── Bucstop WebApp/            					# Main web application
 │   └── BucStop/
-│       ├── Controllers/       # MVC controllers
-│       ├── Views/             # UI templates
-│       ├── Models/            # Data models
-│       ├── Services/          # Business logic
-│       └── MicroServices/     # Service communication
-├── Team-3-BucStop_APIGateway/ # API Gateway service
-├── Team-3-BucStop_Snake/      # Snake game microservice
-├── Team-3-BucStop_Tetris/     # Tetris game microservice
-├── Team-3-BucStop_Pong/       # Pong game microservice
-├── Documentation/             # Project documentation
-└── docker-compose.yml         # Container orchestration
+│       ├── Controllers/       					# MVC controllers
+│       ├── Views/             					# UI templates
+│       ├── Models/            					# Data models
+│       ├── Services/          					# Business logic
+│       └── MicroServices/     					# Service communication
+├── Team-3-BucStop_APIGateway/ 					# API Gateway service
+├── Team-3-BucStop_Snake/      					# Snake game microservice
+├── Team-3-BucStop_Tetris/    					# Tetris game microservice
+├── Team-3-BucStop_Pong/       					# Pong game microservice
+├── Team-Team-QWERTY-BucStop_Submission       	# API Submission Gateway service
+├── Documentation/             					# Project documentation
+└── docker-compose.yml         					# Container orchestration
 ```
 
 ## Contributing
