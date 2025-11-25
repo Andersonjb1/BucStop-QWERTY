@@ -1,5 +1,10 @@
 # AWS EC2 Key Pair Setup
 
+**Before continuing with your AWS instance setup, you need to create an AWS Account**
+- Visit this link if you don't already have one:
+- [AWS Management Console Signup](https://signin.aws.amazon.com/signup?request_type=register)
+
+
 Key pairs are used to securely connect to your EC2 instances over SSH.  
 
 ---
