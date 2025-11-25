@@ -18,18 +18,19 @@ This guide explains how to configure an AWS Security Group so that:
 
 ### 1. Open Security Group in AWS Console
 1. Navigate to **EC2 → Security Groups**.
-2. Name the Security Group **BucStop**
-3. Select the Security Group attached to your instance or create a new one.
+2. Click the orange button in the top right to create a security group.
+3. Name the Security Group **BucStop**
+4. Select the Security Group attached to your instance or create a new one.
 
 ---
 
 ### 2. Configure Inbound Rules
 
-Add the following rules:
+Add the following rules (click into the box with the search icon to type in the IPs under source):
 
 | Port(s)     | Protocol | Source            | Purpose                                      |
 | ----------- | -------- | ----------------- | -------------------------------------------- |
-| 22          | TCP      | `<your-ip>/32`    | Admin SSH access (replace with your IP)      |
+| SSH         | TCP      | `<your-ip>/32`    | Admin SSH access (replace with your IP)      |
 | All Traffic | TCP      | `151.141.0.0/16`  | Allow web traffic from ETSU Wifi CIDR block  |
 | All Traffic | TCP      | `216.145.70.0/23` | Allow web traffic from ETSU E-NET CIDR block |
 
