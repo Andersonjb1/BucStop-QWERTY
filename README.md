@@ -134,7 +134,7 @@ BucStop-QWERTY/
 ├── Team-3-BucStop_Snake/      					# Snake game microservice
 ├── Team-3-BucStop_Tetris/    					# Tetris game microservice
 ├── Team-3-BucStop_Pong/       					# Pong game microservice
-├── Team-Team-QWERTY-BucStop_Submission       	# API Submission Gateway service
+├── Team-QWERTY-BucStop_Submission       	# API Submission Gateway service
 ├── Documentation/             					# Project documentation
 └── docker-compose.yml         					# Container orchestration
 ```
