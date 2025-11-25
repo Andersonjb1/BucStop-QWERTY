@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.IO;
 
 namespace BucStop.Controllers
@@ -8,37 +7,35 @@ namespace BucStop.Controllers
     [Route("admin/submissions")]
     public class SubmissionAdminController : Controller
     {
-        private static readonly string SubmissionsBasePath = "/app/Submissions";
-
         [HttpDelete("{folderName}")]
         public IActionResult RejectSubmission(string folderName)
         {
+            const string Root = "/app/Submissions";
+            // Validate input
             if (string.IsNullOrWhiteSpace(folderName))
-            {
+                return BadRequest(new { success = false, message = "Folder name is required." });
+            // Sanitize folder name
+            string safeFolderName = System.Text.RegularExpressions.Regex.Replace(
+                folderName,
+                @"[^A-Za-z0-9._-]",   // allowed characters
+                "_"
+            ).Replace("..", "_");       // prevent parent directory traversal
+
+            if (safeFolderName.Length == 0)
                 return BadRequest(new { success = false, message = "Invalid folder name." });
-            }
+            // Combine with root path    
+            string candidatePath = Path.Combine(Root, safeFolderName);
 
-            if (folderName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
-                folderName.Contains('/') ||
-                folderName.Contains('\\') ||
-                folderName.Contains(".."))
-            {
-                return BadRequest(new { success = false, message = "Invalid folder name." });
-            }
+            // Normalize and enforce it stays under /app/Submissions
+            string fullPath = Path.GetFullPath(candidatePath);
 
-            var basePath = Path.GetFullPath(SubmissionsBasePath);
-            if (!basePath.EndsWith(Path.DirectorySeparatorChar))
-            {
-                basePath += Path.DirectorySeparatorChar;
-            }
+            string fullRoot = Path.GetFullPath(Root)
+                .TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
-            var fullPath = Path.GetFullPath(Path.Combine(basePath, folderName));
+            if (!fullPath.StartsWith(fullRoot, StringComparison.Ordinal))
+                return BadRequest(new { success = false, message = "Invalid folder path." });
 
-            if (!fullPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new { success = false, message = "Invalid folder name." });
-            }
-
+            // Perform deletion
             try
             {
                 if (!Directory.Exists(fullPath))
@@ -48,7 +45,7 @@ namespace BucStop.Controllers
 
                 Directory.Delete(fullPath, recursive: true);
 
-                return Ok(new { success = true, folder = folderName });
+                return Ok(new { success = true, folder = safeFolderName });
             }
             catch (Exception ex)
             {
@@ -57,4 +54,3 @@ namespace BucStop.Controllers
         }
     }
 }
-                
