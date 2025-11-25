@@ -50,4 +50,9 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
    - EX Command: `grep -rl "3.232.16.65" . | xargs sed -i 's/3\.232\.16\.65/54.175.113.189/g'`
 
 # 6. Build Application
-```sudo env=containers docker compose up -d``` (-d runs the containers in the background)
+
+- There are currently two options to build and run the container but only the first option will work for the AWS environment:
+1. **Build for Production**
+```sudo docker compose up -d``` (-d runs the containers in the background)
+2. **Build Locally** (only for development and does not work in AWS)
+```docker compose -f docker-compose.dev.yml up -d```
