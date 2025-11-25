@@ -69,9 +69,16 @@ The application is built using a microservices architecture with the following c
    - API Submission Gateway: http://localhost:8085
   
 4. Closing and resetting containers
+
+**Linux**
    ```bash
    sudo docker compose down
    sudo docker system prune -a
+   ```
+**Windows**
+   ```bash
+   docker compose down
+   docker system prune -a
    ```
 
 ### Local Development Without Docker
