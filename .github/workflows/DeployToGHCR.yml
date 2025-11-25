@@ -1,9 +1,9 @@
-# Build changed microservice images on push to Sprint-* and ensure all 5 images exist in GHCR
+# Build changed microservice images on push to Sprint-* and ensure all 6 images exist in GHCR
 #
 # - Triggers on push to branches matching Sprint-*
-# - Detects which of the five microservice directories changed
+# - Detects which of the six microservice directories changed
 # - Builds & pushes images for changed services to GitHub Container Registry (GHCR)
-# - Ensures at the end that all 5 service images exist in GHCR (builds any missing ones from the default branch)
+# - Ensures at the end that all 6 service images exist in GHCR (builds any missing ones from the default branch)
 #
 # Services:
 # - webapp  -> "Bucstop_WebApp/BucStop/"
@@ -11,6 +11,7 @@
 # - snake   -> "Team-3-BucStop_Snake/Snake/"
 # - pong    -> "Team-3-BucStop_Pong/Pong/"
 # - tetris  -> "Team-3-BucStop_Tetris/Tetris/"
+# - submission-gateway -> "Team-QWERTY-BucStop_Submission/SubmissionAPIGateway/"
 
 name: DeployToGHCR
 
@@ -71,6 +72,9 @@ jobs:
             tetris:
               - 'Team-3-BucStop_Tetris/Tetris/**'
               - 'Team-3-BucStop_Tetris/**'
+            submission-gateway:
+              - 'Team-QWERTY-BucStop_Submission/SubmissionAPIGateway/**'
+              - 'Team-QWERTY-BucStop_Submission/**'
 
       - name: Produce JSON array of changed services
         id: services-json
@@ -80,7 +84,8 @@ jobs:
           [[ "${{ steps.filter.outputs.gateway }}" == 'true' ]] && changed+=('gateway')
           [[ "${{ steps.filter.outputs.snake }}" == 'true' ]] && changed+=('snake')
           [[ "${{ steps.filter.outputs.pong }}" == 'true' ]] && changed+=('pong')
-          [[ "${{ steps.filter.outputs.tetris }}" == 'true' ]] && changed+=('tetris') 
+          [[ "${{ steps.filter.outputs.tetris }}" == 'true' ]] && changed+=('tetris')
+          [[ "${{ steps.filter.outputs.submission-gateway }}" == 'true' ]] && changed+=('submission-gateway')
 
           if [ ${#changed[@]} -eq 0 ]; then
             echo "services=[]" >> "$GITHUB_OUTPUT"
@@ -148,6 +153,10 @@ jobs:
               path="Team-3-BucStop_Tetris/Tetris"
               dockerfile="Team-3-BucStop_Tetris/Tetris/Dockerfile"
               ;;
+            submission-gateway)
+              path="Team-QWERTY-BucStop_Submission/SubmissionAPIGateway"
+              dockerfile="Team-QWERTY-BucStop_Submission/SubmissionAPIGateway/Dockerfile"
+              ;;
             ""|0)
               echo "no changed services detected"
               exit 0
@@ -180,7 +189,7 @@ jobs:
           cache-to: type=inline
 
   ensure-all-images:
-    name: Ensure all 5 images exist in GHCR (build missing ones from latest release or default branch)
+    name: Ensure all 6 images exist in GHCR (build missing ones from latest release or default branch)
     needs: [set-namespace, detect-changes]
     runs-on: ubuntu-latest
     env:
@@ -233,7 +242,7 @@ jobs:
           set -euo pipefail
 
           # canonical list of services
-          services=(webapp gateway snake pong tetris)
+          services=(webapp gateway snake pong tetris submission-gateway)
 
           # mapping function: return directory for a service name
           get_dir() {
@@ -243,6 +252,7 @@ jobs:
               snake)   echo "Team-3-BucStop_Snake/Snake" ;;
               pong)    echo "Team-3-BucStop_Pong/Pong" ;;
               tetris)  echo "Team-3-BucStop_Tetris/Tetris" ;;
+              submission-gateway) echo "Team-QWERTY-BucStop_Submission/SubmissionAPIGateway" ;;
               *) echo "" ;;
             esac
           }
