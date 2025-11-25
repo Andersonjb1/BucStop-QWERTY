@@ -49,14 +49,8 @@
                         </li>
                         }
                     </ul>
-                    @{
-                        var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
-                        var act = (ViewContext.RouteData.Values["action"]?.ToString() ?? "").ToLower();
-                        var isAdminPage = ctrl == "admin" && act == "index";
-                        var isSnapshotsPage = ctrl == "snapshots" && act == "index";
-                    }
 
-                    @if ((isAdminPage || isSnapshotsPage) && (User.Identity?.IsAuthenticated ?? false))
+                    @if(User.Identity?.IsAuthenticated ?? false)
                     {
                     <form asp-controller="Account"
                           asp-action="Logout"
