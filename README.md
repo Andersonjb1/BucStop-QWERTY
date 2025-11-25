@@ -67,6 +67,12 @@ The application is built using a microservices architecture with the following c
    - Pong: http://localhost:8083
    - Tetris: http://localhost:8084
    - API Submission Gateway: http://localhost:8085
+  
+4. Closing and resetting containers
+   ```bash
+   sudo docker compose down
+   sudo docker system prune -a
+   ```
 
 ### Local Development Without Docker
 
