@@ -36,7 +36,7 @@ The submission will be rejected if the uploaded JavaScript file (`jsFile`) fails
 The "Code contains potentially dangerous patterns" rejection is triggered if the submitted JavaScript code (checked by `ContainsDangerousCode`) contains any of the following security-sensitive patterns:
 
 - `eval(` (including variations like `eval()`)
-- `<script`
+- `<script>`
 - `document.write`
 - `innerHTML =`
 - `outerHTML =`
