@@ -49,14 +49,8 @@
                         </li>
                         }
                     </ul>
-                    @{
-                        var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
-                        var act = (ViewContext.RouteData.Values["action"]?.ToString() ?? "").ToLower();
-                        var isAdminPage = ctrl == "admin" && act == "index";
-                        var isSnapshotsPage = ctrl == "snapshots" && act == "index";
-                    }
 
-                    @if ((isAdminPage || isSnapshotsPage) && (User.Identity?.IsAuthenticated ?? false))
+                    @if(User.Identity?.IsAuthenticated ?? false)
                     {
                     <form asp-controller="Account"
                           asp-action="Logout"
@@ -81,7 +75,7 @@
     <!-- This block handles the footer, which includes the version number for the project. -->
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2023 - BucStop - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> - <a href="https://github.com/Andersonjb1/BucStop-QWERTY/releases/latest" style="color:#C6AA76;">Version: 1.4.0</a><a> - </a>
+            &copy; 2023 - BucStop - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> - <a href="https://github.com/Andersonjb1/BucStop-QWERTY/releases/latest" style="color:#C6AA76;">Version: 2.0.0</a><a> - </a>
 
         </div>
     </footer>
