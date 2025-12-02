@@ -82,8 +82,8 @@ namespace BucStop.Controllers
             else
             {
                 // Authentication failed, return to the login page with an error message
-                _logger.LogWarning("{Category}: Invalid ETSU login attempt.", "InvalidLogin");
-                ModelState.AddModelError(string.Empty, "Only ETSU students can play, sorry :(");
+                _logger.LogWarning("{Category}: Invalid Bucstop admin login attempt.", "InvalidLogin");
+                ModelState.AddModelError(string.Empty, "Only BucStop admins can login");
 
                 stopwatch.Stop();
 

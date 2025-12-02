@@ -16,10 +16,10 @@ The application is built using a microservices architecture with the following c
 
 - **WebApp**: Main frontend service that handles user authentication, game selection, and user interface
 - **API Gateway**: Orchestrates communication between the WebApp and game microservices
-- **Submission Gateway**: In a future release, it will allow users to submit their own games.
 - **Game Microservices**: Independent services for each game (Snake, Tetris, Pong)
+- **API Submission Gateway**: Handles game submission data between the submission storage and WebApp
 
-![Architecture Diagram](/Documentation/CookedDocumentation/CookedGraph.png)
+![Architecture Diagram](Documentation/QWERTY_Documentation/QWERTY-BucStop-Architecture.drawio.png)
 
 ## Technologies
 
@@ -47,9 +47,11 @@ The application is built using a microservices architecture with the following c
    cd BucStop-QWERTY
    ```
 
-2. Start all services locally using Docker Compose specifying the .dev version:
-   ```
-   sudo env=containersLocal docker compose -f docker-compose.dev.yml build --no-cache
+2. Start all services using Docker Compose (in dev):
+
+   ```bash
+   docker compose -f docker-compose.dev.yml build --no-cache
+   docker compose -f docker-compose.dev.yml up -d
    ```
 
 3. Access the application:
@@ -58,6 +60,14 @@ The application is built using a microservices architecture with the following c
    - Snake: http://localhost:8082
    - Pong: http://localhost:8083
    - Tetris: http://localhost:8084
+   - API Submission Gateway: http://localhost:8085
+  
+4. Closing and resetting containers
+
+   ```bash
+   docker compose down
+   docker system prune -a
+   ```
 
 ### Local Development Without Docker
 
@@ -77,6 +87,7 @@ While Docker Compose manages service discovery and networking between containers
      - `Snake`
      - `Pong`
      - `Tetris`
+     - `SubmissionAPIGateway`
    - Configure the startup order with the API Gateway first, followed by the game services, and finally the WebApp
    - Click "OK" to save the configuration
 
@@ -91,16 +102,14 @@ Visual Studio automatically handles:
 
 ## Deployment to AWS
 
-### Setting Up AWS Resources
-
-__See (Documentation/AWS-Setup)__
+For Proper AWS Deployment steps, please see the documentation folder for an in-depth guide.
 
 ### Environment Configuration
 
 The application supports multiple environments through configuration files:
 
 - `appsettings.Development.json`: Local development settings (please don't use this - for your own sanity)
-- `appsettings.containersLocal.json`: Local Docker container settings **(Default Config)**
+- `appsettings.containersLocal.json`: Local Docker container settings
 - `appsettings.containers.json`: Production container settings
 - `appsettings.Production.json`: Production settings (currently deprecated - consider removing)
 
@@ -114,20 +123,20 @@ env=containers docker-compose up -d
 
 ```
 BucStop-QWERTY/
-├── BucStop_WebApp/            # Main web application
+├── Bucstop WebApp/            					# Main web application
 │   └── BucStop/
-│       ├── Controllers/       # MVC controllers
-│       ├── Views/             # UI templates
-│       ├── Models/            # Data models
-│       ├── Services/          # Business logic
-│       └── MicroServices/     # Service communication
-├── BucStop_SubmissionGateway  # Submission Gateway service
-├── Team-3-BucStop_APIGateway/ # API Gateway service
-├── Team-3-BucStop_Snake/      # Snake game microservice
-├── Team-3-BucStop_Tetris/     # Tetris game microservice
-├── Team-3-BucStop_Pong/       # Pong game microservice
-├── Documentation/             # Project documentation
-└── docker-compose.yml         # Container orchestration
+│       ├── Controllers/       					# MVC controllers
+│       ├── Views/             					# UI templates
+│       ├── Models/            					# Data models
+│       ├── Services/          					# Business logic
+│       └── MicroServices/     					# Service communication
+├── Team-3-BucStop_APIGateway/ 					# API Gateway service
+├── Team-3-BucStop_Snake/      					# Snake game microservice
+├── Team-3-BucStop_Tetris/    					# Tetris game microservice
+├── Team-3-BucStop_Pong/       					# Pong game microservice
+├── Team-QWERTY-BucStop_Submission       	# API Submission Gateway service
+├── Documentation/             					# Project documentation
+└── docker-compose.yml         					# Container orchestration
 ```
 
 ## Contributing
@@ -158,11 +167,11 @@ All services use Serilog for structured logging:
 
 ```bash
 # View logs for all containers
-docker compose logs
+docker-compose logs
 
 # View logs for a specific service
-docker compose logs bucstop
-docker compose logs api-gateway
+docker-compose logs bucstop
+docker-compose logs api-gateway
 ```
 
 ## License
