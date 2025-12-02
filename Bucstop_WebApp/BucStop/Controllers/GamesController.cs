@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
  */
 namespace BucStop.Controllers
 {
-    
+
     public class GamesController : Controller
     {
         private readonly MicroClient _httpClient;
@@ -197,89 +197,89 @@ namespace BucStop.Controllers
                     safeTitle);
                 // TODO: Save submissionModel to database or secured file store --------------------------
                 // Define the Docker-mounted directory path
-// Define the Docker-mounted directory path
-var submissionDirectory = "/app/Submissions";
+                // Define the Docker-mounted directory path
+                var submissionDirectory = "/app/Submissions";
 
-// Ensure base directory exists (defense in depth)
-if (!Directory.Exists(submissionDirectory))
-{
-    Directory.CreateDirectory(submissionDirectory);
-}
+                // Ensure base directory exists (defense in depth)
+                if (!Directory.Exists(submissionDirectory))
+                {
+                    Directory.CreateDirectory(submissionDirectory);
+                }
 
-// ---------- SECURITY: validate and normalize everything ----------
+                // ---------- SECURITY: validate and normalize everything ----------
 
-// 1) Only allow .js uploads
-var fileExtension = Path.GetExtension(jsFile.FileName).ToLowerInvariant();
-var allowedExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".js" };
-if (!allowedExts.Contains(fileExtension))
-{
-    TempData["Message"] = "Only .js files are allowed.";
-    return RedirectToAction("Index", "Home");
-}
+                // 1) Only allow .js uploads
+                var fileExtension = Path.GetExtension(jsFile.FileName).ToLowerInvariant();
+                var allowedExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".js" };
+                if (!allowedExts.Contains(fileExtension))
+                {
+                    TempData["Message"] = "Only .js files are allowed.";
+                    return RedirectToAction("Index", "Home");
+                }
 
-// 2) Sanitize user-controlled component (username) so it is ONE safe path component
-static string SanitizeComponent(string input)
-{
-    if (string.IsNullOrWhiteSpace(input)) return "anon";
-    // allow letters, digits, dot, underscore, hyphen; replace others with underscore
-    var cleaned = Regex.Replace(input, @"[^A-Za-z0-9._-]", "_");
-    cleaned = cleaned.Trim(' ', '.'); // avoid leading/trailing dots or spaces
-    if (cleaned.Length == 0) return "anon";
-    // collapse any accidental parent-dir hints
-    cleaned = cleaned.Replace("..", "_");
-    return cleaned;
-}
+                // 2) Sanitize user-controlled component (username) so it is ONE safe path component
+                static string SanitizeComponent(string input)
+                {
+                    if (string.IsNullOrWhiteSpace(input)) return "anon";
+                    // allow letters, digits, dot, underscore, hyphen; replace others with underscore
+                    var cleaned = Regex.Replace(input, @"[^A-Za-z0-9._-]", "_");
+                    cleaned = cleaned.Trim(' ', '.'); // avoid leading/trailing dots or spaces
+                    if (cleaned.Length == 0) return "anon";
+                    // collapse any accidental parent-dir hints
+                    cleaned = cleaned.Replace("..", "_");
+                    return cleaned;
+                }
 
-var safeUser = SanitizeComponent(submissionModel.Username);
-var stamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+                var safeUser = SanitizeComponent(submissionModel.Username);
+                var stamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
 
-// 3) Build names using safe components
-var uniqueFileName = $"game_{safeUser}_{stamp}{fileExtension}";
-var uniqueJsonName = $"meta_{safeUser}_{stamp}.json";
-var folderName     = $"{safeUser}_{stamp}";
+                // 3) Build names using safe components
+                var uniqueFileName = $"game_{safeUser}_{stamp}{fileExtension}";
+                var uniqueJsonName = $"meta_{safeUser}_{stamp}.json";
+                var folderName = $"{safeUser}_{stamp}";
 
-// 4) Combine under the approved root, then normalize and verify containment
-static string EnsureUnderRoot(string root, string path)
-{
-    var fullRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-    var fullPath = Path.GetFullPath(path);
-    if (!fullPath.StartsWith(fullRoot, StringComparison.Ordinal))
-        throw new InvalidOperationException("Invalid path.");
-    return fullPath;
-}
+                // 4) Combine under the approved root, then normalize and verify containment
+                static string EnsureUnderRoot(string root, string path)
+                {
+                    var fullRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                    var fullPath = Path.GetFullPath(path);
+                    if (!fullPath.StartsWith(fullRoot, StringComparison.Ordinal))
+                        throw new InvalidOperationException("Invalid path.");
+                    return fullPath;
+                }
 
-var uniqueFolderCandidate = Path.Combine(submissionDirectory, folderName);
-var uniqueFolderPath      = EnsureUnderRoot(submissionDirectory, uniqueFolderCandidate);
+                var uniqueFolderCandidate = Path.Combine(submissionDirectory, folderName);
+                var uniqueFolderPath = EnsureUnderRoot(submissionDirectory, uniqueFolderCandidate);
 
-// Now that the path is proven safe, create it.
-Directory.CreateDirectory(uniqueFolderPath);
+                // Now that the path is proven safe, create it.
+                Directory.CreateDirectory(uniqueFolderPath);
 
-// Resolve file targets (and re-verify if desired)
-var filePathCandidate = Path.Combine(uniqueFolderPath, uniqueFileName);
-var jsonPathCandidate = Path.Combine(uniqueFolderPath, uniqueJsonName);
+                // Resolve file targets (and re-verify if desired)
+                var filePathCandidate = Path.Combine(uniqueFolderPath, uniqueFileName);
+                var jsonPathCandidate = Path.Combine(uniqueFolderPath, uniqueJsonName);
 
-var filePath = EnsureUnderRoot(submissionDirectory, filePathCandidate);
-var jsonPath = EnsureUnderRoot(submissionDirectory, jsonPathCandidate);
+                var filePath = EnsureUnderRoot(submissionDirectory, filePathCandidate);
+                var jsonPath = EnsureUnderRoot(submissionDirectory, jsonPathCandidate);
 
-// ---------- WRITE FILES SAFELY ----------
+                // ---------- WRITE FILES SAFELY ----------
 
-// Save the JSON metadata
-await using (var createStream = System.IO.File.Create(jsonPath))
-{
-    await JsonSerializer.SerializeAsync(createStream, new List<GameSubmissionModel> { submissionModel },
-        new JsonSerializerOptions { WriteIndented = true });
-}
+                // Save the JSON metadata
+                await using (var createStream = System.IO.File.Create(jsonPath))
+                {
+                    await JsonSerializer.SerializeAsync(createStream, new List<GameSubmissionModel> { submissionModel },
+                        new JsonSerializerOptions { WriteIndented = true });
+                }
 
-// Save the uploaded JS file
-using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
-{
-    await jsFile.CopyToAsync(stream);
-}
+                // Save the uploaded JS file
+                using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    await jsFile.CopyToAsync(stream);
+                }
 
 
                 TempData["Message"] = "✅ Thank you! Your suggestion has been received (but not stored).";
                 //    END OF SAVING ----------------------------------------------------------------------
-            
+
 
                 TempData["Message"] = "Success! Your game suggestion has been submitted for review.";
                 TempData["SubmittedTitle"] = submissionModel.SuggestedTitle;
@@ -452,7 +452,7 @@ using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, 
             var dangerousPatterns = new[]
             {
                 @"eval\s*\(",
-                @"Function\s*\(",
+                //@"Function\s*\(",
                 @"<script",
                 @"document\.write",
                 @"innerHTML\s*=",

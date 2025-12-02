@@ -1,5 +1,10 @@
 # AWS EC2 Key Pair Setup
 
+**Before continuing with your AWS instance setup, you need to create an AWS Account**
+- Visit this link if you don't already have one:
+- [AWS Management Console Signup](https://signin.aws.amazon.com/signup?request_type=register)
+
+
 Key pairs are used to securely connect to your EC2 instances over SSH.  
 
 ---
@@ -28,12 +33,3 @@ Key pairs are used to securely connect to your EC2 instances over SSH.
 3. Enter a name → Click Browse and find your key.
 4. Click **Import Key Pair**
 5. The pair should be ready to use when creating an instance.
-
-## 4. Using the Key Pair
-1. Open a terminal 
-2. Use the command below, adding your own key path and your instance's IP. 
-
-```ssh -i <key path> ec2-user@<instance-public-ip>```
-
-_This command can be found when clicking connect on an instance then clicking SSH_
-

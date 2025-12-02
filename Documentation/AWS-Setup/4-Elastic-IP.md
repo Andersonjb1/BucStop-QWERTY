@@ -29,5 +29,8 @@ An Elastic IP (EIP) provides a static public IPv4 address that persists across E
 3. Move down the page, under **Instance** select the instance that was created for BucStop
 4. Lastly, select the Private IP assigned to your instance
 
-## All done
+## 3. Reboot the AWS SSH Connection
+1. If you are still logged into your AWS Instance in the terminal run `exit`
+2. Repeat the steps from `3-EC2-Instance.md` under the `## 2. Connect to the Instance` header to connect again.
+
 - See `5-Setting-Up-EC2-Environment` for the next steps
