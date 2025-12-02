@@ -19,7 +19,7 @@ The application is built using a microservices architecture with the following c
 - **Game Microservices**: Independent services for each game (Snake, Tetris, Pong)
 - **API Submission Gateway**: Handles game submission data between the submission storage and WebApp
 
-![Architecture Diagram](/Documentation/CookedDocumentation/CookedGraph.png)
+![Architecture Diagram](Documentation/QWERTY_Documentation/QWERTY-BucStop-Architecture.drawio.png)
 
 ## Technologies
 
